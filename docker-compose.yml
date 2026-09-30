@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: asvk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vinokurov
+      POSTGRES_PASSWORD: vinokurov
+      POSTGRES_DB: asvk_scheduler
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
