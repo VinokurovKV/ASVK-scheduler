@@ -8,3 +8,6 @@ coverage/
 
 .vscode
 .DS_Store
+
+backend/src/generated/prisma/
+*.tsbuildinfo

@@ -12,11 +12,82 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CalendarType {
+  PERSONAL
+  GROUP
+  DEPARTMENT
+}
+
+enum EventFormat {
+  ONLINE
+  OFFLINE
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+
+  calendars      Calendar[]
+  createdEvents  Event[]            @relation("EventCreator")
+  participations EventParticipant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Calendar {
+  id   Int          @id @default(autoincrement())
+  name String
+  type CalendarType
+
+  ownerId Int
+  owner   User @relation(fields: [ownerId], references: [id])
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String?
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  format     EventFormat
+  room       String?
+  meetingUrl String?
+
+  calendarId Int
+  calendar   Calendar @relation(fields: [calendarId], references: [id])
+
+  creatorId Int
+  creator   User @relation("EventCreator", fields: [creatorId], references: [id])
+
+  participants EventParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventParticipant {
+  eventId Int
+  userId  Int
+
+  status ParticipantStatus @default(PENDING)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
 }
