@@ -9,6 +9,7 @@ import {
   Alert,
   Box,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
@@ -17,8 +18,10 @@ import {
 } from "@mui/material";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { getEvents } from "../api/events";
+import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
 import type { Event, RepeatInterval } from "../types/Event";
 
 const repeatLabels: Record<RepeatInterval, string> = {
@@ -75,6 +78,8 @@ const EventPlace = ({ event }: { event: Event }) => {
 };
 
 export const EventsPage = () => {
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
   const {
     data: events = [],
     isLoading,
@@ -173,77 +178,90 @@ export const EventsPage = () => {
               variant="outlined"
               sx={{ borderRadius: 3 }}
             >
-              <CardContent>
-                <Stack spacing={1.5}>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{
-                      alignItems: "flex-start",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontSize: "1rem",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {event.title}
+              <CardActionArea
+                onClick={() => setSelectedEvent(event)}
+                aria-label={`Открыть событие «${event.title}»`}
+                sx={{ height: "100%" }}
+              >
+                <CardContent>
+                  <Stack spacing={1.5}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontSize: "1rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {event.title}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            mt: 0.25,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {formatDate(event.startsAt)}
+                        </Typography>
+                      </Box>
+
+                      <Chip
+                        label={event.format === "ONLINE" ? "Онлайн" : "Очно"}
+                        size="small"
+                      />
+                    </Stack>
+
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <AccessTime fontSize="small" color="action" />
+
+                      <Typography variant="body2" color="text.secondary">
+                        {formatTime(event.startsAt)}
+                        {"–"}
+                        {formatTime(event.endsAt)}
                       </Typography>
+                    </Stack>
 
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          mt: 0.25,
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {formatDate(event.startsAt)}
+                    <EventPlace event={event} />
+
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <Repeat fontSize="small" color="action" />
+
+                      <Typography variant="body2" color="text.secondary">
+                        {repeatLabels[event.repeatInterval]}
                       </Typography>
-                    </Box>
-
-                    <Chip
-                      label={event.format === "ONLINE" ? "Онлайн" : "Очно"}
-                      size="small"
-                    />
+                    </Stack>
                   </Stack>
-
-                  <Stack
-                    direction="row"
-                    spacing={0.75}
-                    sx={{ alignItems: "center" }}
-                  >
-                    <AccessTime fontSize="small" color="action" />
-
-                    <Typography variant="body2" color="text.secondary">
-                      {formatTime(event.startsAt)}
-                      {"–"}
-                      {formatTime(event.endsAt)}
-                    </Typography>
-                  </Stack>
-
-                  <EventPlace event={event} />
-
-                  <Stack
-                    direction="row"
-                    spacing={0.75}
-                    sx={{ alignItems: "center" }}
-                  >
-                    <Repeat fontSize="small" color="action" />
-
-                    <Typography variant="body2" color="text.secondary">
-                      {repeatLabels[event.repeatInterval]}
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
+                </CardContent>
+              </CardActionArea>
             </Card>
           ))}
         </Box>
+      )}
+
+      {selectedEvent && (
+        <EventDetailsDialog
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
       )}
     </Stack>
   );
