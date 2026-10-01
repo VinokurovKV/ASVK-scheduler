@@ -17,3 +17,17 @@ export interface CreateEventInput {
   calendarId: number;
   creatorId: number;
 }
+
+export interface UpdateEventInput {
+  title?: string;
+  description?: string | null;
+
+  startsAt?: string;
+  endsAt?: string;
+
+  format?: EventFormat;
+  repeatInterval?: RepeatInterval;
+
+  room?: string;
+  meetingUrl?: string;
+}

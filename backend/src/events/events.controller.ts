@@ -7,10 +7,11 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { EventsService } from './events.service.js';
-import type { CreateEventInput } from './events.types.js';
+import type { CreateEventInput, UpdateEventInput } from './events.types.js';
 
 @Controller('events')
 export class EventsController {
@@ -24,6 +25,14 @@ export class EventsController {
   @Post()
   create(@Body() body: CreateEventInput) {
     return this.eventsService.create(body);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateEventInput,
+  ) {
+    return this.eventsService.update(id, body);
   }
 
   @Delete(':id')
