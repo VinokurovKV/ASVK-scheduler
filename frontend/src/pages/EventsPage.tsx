@@ -1,7 +1,9 @@
 import {
   AccessTime,
+  Close,
   LocationOn,
   Repeat,
+  Search,
   Videocam,
 } from "@mui/icons-material";
 
@@ -13,7 +15,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  IconButton,
+  InputAdornment,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 
@@ -79,6 +84,7 @@ const EventPlace = ({ event }: { event: Event }) => {
 
 export const EventsPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: events = [],
@@ -95,6 +101,26 @@ export const EventsPage = () => {
       new Date(second.startsAt).getTime(),
   );
 
+  const normalizedQuery = searchQuery.trim().toLocaleLowerCase("ru-RU");
+
+  const filteredEvents = sortedEvents.filter((event) => {
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    const searchableText = [
+      event.title,
+      event.description,
+      event.room,
+      event.meetingUrl,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("ru-RU");
+
+    return searchableText.includes(normalizedQuery);
+  });
+
   return (
     <Stack
       spacing={3}
@@ -104,24 +130,82 @@ export const EventsPage = () => {
         mx: "auto",
       }}
     >
-      <Box>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            fontSize: {
-              xs: "1.75rem",
-              md: "2.125rem",
-            },
-          }}
-        >
-          События
-        </Typography>
+      <Stack
+        spacing={2}
+        sx={{
+          flexDirection: {
+            xs: "column",
+            md: "row",
+          },
+          alignItems: {
+            xs: "stretch",
+            md: "flex-end",
+          },
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              fontSize: {
+                xs: "1.75rem",
+                md: "2.125rem",
+              },
+            }}
+          >
+            События
+          </Typography>
 
-        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-          Все события вашего расписания
-        </Typography>
-      </Box>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Все события вашего расписания
+          </Typography>
+        </Box>
+
+        {!isLoading && !isError && sortedEvents.length > 0 && (
+          <TextField
+            type="text"
+            label="Поиск событий"
+            placeholder="Название, описание или место"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            autoComplete="off"
+            fullWidth
+            slotProps={{
+              htmlInput: {
+                inputMode: "search",
+                enterKeyHint: "search",
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      aria-label="Очистить поиск"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      <Close />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
+            sx={{
+              width: {
+                xs: "100%",
+                md: 420,
+              },
+              flexShrink: 0,
+            }}
+          />
+        )}
+      </Stack>
 
       {isLoading && (
         <Box
@@ -155,7 +239,27 @@ export const EventsPage = () => {
         </Card>
       )}
 
-      {!isLoading && !isError && sortedEvents.length > 0 && (
+      {!isLoading &&
+        !isError &&
+        sortedEvents.length > 0 &&
+        filteredEvents.length === 0 && (
+          <Card variant="outlined" sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography
+                color="text.secondary"
+                role="status"
+                sx={{
+                  py: 4,
+                  textAlign: "center",
+                }}
+              >
+                По вашему запросу ничего не найдено
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+
+      {!isLoading && !isError && filteredEvents.length > 0 && (
         <Box
           component="ul"
           sx={{
@@ -171,7 +275,7 @@ export const EventsPage = () => {
             listStyle: "none",
           }}
         >
-          {sortedEvents.map((event) => (
+          {filteredEvents.map((event) => (
             <Card
               component="li"
               key={event.id}
