@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import type { CreateEventInput } from './events.types.js';
 
@@ -71,5 +75,17 @@ export class EventsService {
         creator: true,
       },
     });
+  }
+
+  async remove(id: number) {
+    const result = await this.prisma.event.deleteMany({
+      where: {
+        id,
+      },
+    });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Event not found');
+    }
   }
 }

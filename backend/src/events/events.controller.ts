@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { EventsService } from './events.service.js';
 import type { CreateEventInput } from './events.types.js';
 
@@ -14,5 +24,11 @@ export class EventsController {
   @Post()
   create(@Body() body: CreateEventInput) {
     return this.eventsService.create(body);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.eventsService.remove(id);
   }
 }
