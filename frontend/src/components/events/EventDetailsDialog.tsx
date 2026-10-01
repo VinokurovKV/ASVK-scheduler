@@ -3,6 +3,7 @@ import {
   CalendarMonth,
   Close,
   DeleteOutlined,
+  EditOutlined,
   LocationOn,
   Repeat,
   Videocam,
@@ -33,10 +34,12 @@ import { useState } from "react";
 
 import { deleteEvent } from "../../api/events";
 import type { Event, RepeatInterval } from "../../types/Event";
+import { EditEventDialog } from "./EditEventDialog";
 
 interface EventDetailsDialogProps {
   event: Event;
   onClose: () => void;
+  onEventUpdated: (event: Event) => void;
 }
 
 const repeatLabels: Record<RepeatInterval, string> = {
@@ -91,11 +94,13 @@ const DetailRow = ({ icon, label, value }: DetailRowProps) => (
 export const EventDetailsDialog = ({
   event,
   onClose,
+  onEventUpdated,
 }: EventDetailsDialogProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const online = event.format === "ONLINE";
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const deleteEventMutation = useMutation({
@@ -276,16 +281,42 @@ export const EventDetailsDialog = ({
           backgroundColor: "background.paper",
         }}
       >
-        <Button
-          color="error"
-          variant="outlined"
-          startIcon={<DeleteOutlined />}
-          fullWidth={isMobile}
-          onClick={() => setDeleteConfirmationOpen(true)}
+        <Stack
+          direction={{ xs: "column", lg: "row" }}
+          spacing={1}
+          sx={{ width: { xs: "100%", lg: "auto" } }}
         >
-          Удалить событие
-        </Button>
+          <Button
+            variant="contained"
+            startIcon={<EditOutlined />}
+            fullWidth={isMobile}
+            onClick={() => setEditDialogOpen(true)}
+          >
+            Редактировать
+          </Button>
+
+          <Button
+            color="error"
+            variant="outlined"
+            startIcon={<DeleteOutlined />}
+            fullWidth={isMobile}
+            onClick={() => setDeleteConfirmationOpen(true)}
+          >
+            Удалить событие
+          </Button>
+        </Stack>
       </Box>
+
+      {editDialogOpen && (
+        <EditEventDialog
+          event={event}
+          onClose={() => setEditDialogOpen(false)}
+          onUpdated={(updatedEvent) => {
+            onEventUpdated(updatedEvent);
+            setEditDialogOpen(false);
+          }}
+        />
+      )}
 
       <Dialog
         open={deleteConfirmationOpen}

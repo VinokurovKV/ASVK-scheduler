@@ -261,6 +261,7 @@ export const EventsPage = () => {
         <EventDetailsDialog
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
+          onEventUpdated={setSelectedEvent}
         />
       )}
     </Stack>
