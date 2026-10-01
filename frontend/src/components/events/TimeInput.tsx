@@ -31,6 +31,47 @@ export const TimeInput = ({
   const hoursRef = useRef<HTMLInputElement>(null);
   const minutesRef = useRef<HTMLInputElement>(null);
 
+  const focusInputNearPointer = (
+    input: HTMLInputElement,
+    pointerX: number,
+  ) => {
+    const inputRect = input.getBoundingClientRect();
+    const position =
+      pointerX < inputRect.left + inputRect.width / 2 ? 0 : input.value.length;
+
+    input.focus();
+    input.setSelectionRange(position, position);
+  };
+
+  const handleContainerPointerDown = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (event.target instanceof HTMLInputElement) {
+      return;
+    }
+
+    const hoursInput = hoursRef.current;
+    const minutesInput = minutesRef.current;
+
+    if (!hoursInput || !minutesInput) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const hoursRect = hoursInput.getBoundingClientRect();
+    const minutesRect = minutesInput.getBoundingClientRect();
+    const hoursCenter = hoursRect.left + hoursRect.width / 2;
+    const minutesCenter = minutesRect.left + minutesRect.width / 2;
+    const nearestInput =
+      Math.abs(event.clientX - hoursCenter) <=
+      Math.abs(event.clientX - minutesCenter)
+        ? hoursInput
+        : minutesInput;
+
+    focusInputNearPointer(nearestInput, event.clientX);
+  };
+
   const handleHoursKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (
       event.key === "ArrowRight" &&
@@ -64,6 +105,7 @@ export const TimeInput = ({
       }}
     >
       <Box
+        onPointerDown={handleContainerPointerDown}
         sx={{
           position: "relative",
 
@@ -79,6 +121,7 @@ export const TimeInput = ({
           borderColor: error ? "error.main" : "rgba(0, 0, 0, 0.23)",
 
           borderRadius: 1,
+          cursor: "text",
 
           "&:focus-within": {
             borderWidth: 2,
@@ -112,9 +155,11 @@ export const TimeInput = ({
           onChange={(event) => onHoursChange(onlyTwoDigits(event.target.value))}
           onKeyDown={handleHoursKeyDown}
           inputMode="numeric"
+          aria-label={`${label}: часы`}
           placeholder="00"
           style={{
-            width: "2ch",
+            width: "2.25ch",
+            boxSizing: "content-box",
             padding: 0,
             border: 0,
             outline: 0,
@@ -129,7 +174,11 @@ export const TimeInput = ({
         <Typography
           component="span"
           sx={{
-            m: 0,
+            display: "inline-flex",
+            justifyContent: "center",
+            flexShrink: 0,
+            width: "0.75ch",
+            mx: 0.25,
             p: 0,
             fontSize: "1rem",
             lineHeight: 1,
@@ -146,9 +195,11 @@ export const TimeInput = ({
           }
           onKeyDown={handleMinutesKeyDown}
           inputMode="numeric"
+          aria-label={`${label}: минуты`}
           placeholder="00"
           style={{
-            width: "2ch",
+            width: "2.25ch",
+            boxSizing: "content-box",
             padding: 0,
             border: 0,
             outline: 0,
