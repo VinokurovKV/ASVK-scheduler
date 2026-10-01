@@ -47,6 +47,7 @@ export class EventsService {
         endsAt,
 
         format: input.format,
+        repeatInterval: input.repeatInterval ?? 'NONE',
 
         room: input.format === 'OFFLINE' ? input.room : null,
 

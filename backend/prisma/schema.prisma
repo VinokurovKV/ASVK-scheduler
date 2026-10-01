@@ -23,6 +23,13 @@ enum EventFormat {
   OFFLINE
 }
 
+enum RepeatInterval {
+  NONE
+  WEEK
+  TWO_WEEKS
+  MONTH
+}
+
 enum ParticipantStatus {
   PENDING
   ACCEPTED
@@ -64,9 +71,10 @@ model Event {
   startsAt DateTime
   endsAt   DateTime
 
-  format     EventFormat
-  room       String?
-  meetingUrl String?
+  format         EventFormat
+  repeatInterval RepeatInterval @default(NONE)
+  room           String?
+  meetingUrl     String?
 
   calendarId Int
   calendar   Calendar @relation(fields: [calendarId], references: [id])

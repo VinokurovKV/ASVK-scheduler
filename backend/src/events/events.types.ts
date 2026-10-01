@@ -1,4 +1,5 @@
 export type EventFormat = 'ONLINE' | 'OFFLINE';
+export type RepeatInterval = 'NONE' | 'WEEK' | 'TWO_WEEKS' | 'MONTH';
 
 export interface CreateEventInput {
   title: string;
@@ -8,6 +9,7 @@ export interface CreateEventInput {
   endsAt: string;
 
   format: EventFormat;
+  repeatInterval?: RepeatInterval;
 
   room?: string;
   meetingUrl?: string;
