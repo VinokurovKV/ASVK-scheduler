@@ -2,6 +2,7 @@ import {
   AccessTime,
   CalendarMonth,
   Close,
+  DeleteOutlined,
   LocationOn,
   Repeat,
   Videocam,
@@ -9,9 +10,15 @@ import {
 
 import {
   AppBar,
+  Alert,
   Box,
+  Button,
   Chip,
   Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   IconButton,
   Stack,
@@ -21,6 +28,10 @@ import {
   useTheme,
 } from "@mui/material";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+import { deleteEvent } from "../../api/events";
 import type { Event, RepeatInterval } from "../../types/Event";
 
 interface EventDetailsDialogProps {
@@ -84,6 +95,28 @@ export const EventDetailsDialog = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const online = event.format === "ONLINE";
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const deleteEventMutation = useMutation({
+    mutationFn: () => deleteEvent(event.id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["events"],
+      });
+
+      onClose();
+    },
+  });
+
+  const closeDeleteConfirmation = () => {
+    if (deleteEventMutation.isPending) {
+      return;
+    }
+
+    deleteEventMutation.reset();
+    setDeleteConfirmationOpen(false);
+  };
 
   return (
     <Dialog
@@ -228,6 +261,72 @@ export const EventDetailsDialog = ({
           </Box>
         </Stack>
       </Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: {
+            xs: "stretch",
+            lg: "flex-end",
+          },
+          flexShrink: 0,
+          p: 2,
+          borderTop: "1px solid",
+          borderColor: "divider",
+          backgroundColor: "background.paper",
+        }}
+      >
+        <Button
+          color="error"
+          variant="outlined"
+          startIcon={<DeleteOutlined />}
+          fullWidth={isMobile}
+          onClick={() => setDeleteConfirmationOpen(true)}
+        >
+          Удалить событие
+        </Button>
+      </Box>
+
+      <Dialog
+        open={deleteConfirmationOpen}
+        onClose={closeDeleteConfirmation}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="delete-event-title"
+      >
+        <DialogTitle id="delete-event-title">Удалить событие?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            «{event.title}» будет удалено из расписания. Это действие нельзя
+            отменить.
+          </DialogContentText>
+
+          {deleteEventMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Не удалось удалить событие
+            </Alert>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={closeDeleteConfirmation}
+            disabled={deleteEventMutation.isPending}
+          >
+            Отмена
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => deleteEventMutation.mutate()}
+            disabled={deleteEventMutation.isPending}
+          >
+            {deleteEventMutation.isPending ? "Удаление..." : "Удалить"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };

@@ -29,3 +29,13 @@ export const createEvent = async (input: CreateEventInput): Promise<Event> => {
 
   return response.json();
 };
+
+export const deleteEvent = async (id: number): Promise<void> => {
+  const response = await fetch(`${API_URL}/events/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete event");
+  }
+};
