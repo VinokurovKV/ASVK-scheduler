@@ -1,14 +1,31 @@
-import { Alert, Box, CircularProgress, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Fab,
+  Stack,
+  Typography,
+} from "@mui/material";
+
+import { Add } from "@mui/icons-material";
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+
+import { CreateEventDialog } from "../components/events/CreateEventDialog";
 
 import { getEvents } from "../api/events";
 
 import { DesktopSchedule } from "./schedule/DesktopSchedule";
 import { MobileSchedule } from "./schedule/MobileSchedule";
 
-import { addDays, isSameDay, startOfWeek } from "./schedule/scheduleUtils";
+import {
+  addDays,
+  getEventsForWeek,
+  isSameDay,
+  startOfWeek,
+} from "./schedule/scheduleUtils";
 
 export const SchedulePage = () => {
   const today = new Date();
@@ -22,6 +39,8 @@ export const SchedulePage = () => {
 
     return date;
   });
+
+  const [createEventOpen, setCreateEventOpen] = useState(false);
 
   const {
     data: events = [],
@@ -68,21 +87,44 @@ export const SchedulePage = () => {
     return <Alert severity="error">Не удалось загрузить расписание</Alert>;
   }
 
+  const weekEvents = getEventsForWeek(events, weekStart);
+
   return (
     <Stack spacing={3}>
-      <Typography
-        variant="h4"
+      <Stack
+        direction="row"
         sx={{
-          fontWeight: 700,
-
-          fontSize: {
-            xs: "1.75rem",
-            md: "2.125rem",
-          },
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        Расписание
-      </Typography>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            fontSize: {
+              xs: "1.75rem",
+              md: "2.125rem",
+            },
+          }}
+        >
+          Расписание
+        </Typography>
+
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setCreateEventOpen(true)}
+          sx={{
+            display: {
+              xs: "none",
+              lg: "inline-flex",
+            },
+          }}
+        >
+          Создать событие
+        </Button>
+      </Stack>
 
       {/* Mobile + tablet */}
       <Box
@@ -94,7 +136,7 @@ export const SchedulePage = () => {
         }}
       >
         <MobileSchedule
-          events={events}
+          events={weekEvents}
           weekStart={weekStart}
           selectedDate={selectedDate}
           onSelectedDateChange={setSelectedDate}
@@ -112,11 +154,44 @@ export const SchedulePage = () => {
         }}
       >
         <DesktopSchedule
-          events={events}
+          events={weekEvents}
           weekStart={weekStart}
           onWeekChange={changeWeek}
         />
       </Box>
+
+      <Fab
+        color="primary"
+        aria-label="Создать событие"
+        onClick={() => setCreateEventOpen(true)}
+        sx={{
+          display: {
+            xs: "flex",
+            lg: "none",
+          },
+
+          position: "fixed",
+
+          right: 16,
+
+          bottom: {
+            xs: 80,
+            md: 24,
+          },
+
+          zIndex: 900,
+        }}
+      >
+        <Add />
+      </Fab>
+
+      {createEventOpen && (
+        <CreateEventDialog
+          open
+          initialDate={selectedDate}
+          onClose={() => setCreateEventOpen(false)}
+        />
+      )}
     </Stack>
   );
 };

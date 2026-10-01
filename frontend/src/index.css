@@ -16,3 +16,9 @@ body {
 body::-webkit-scrollbar {
   display: none;
 }
+
+@supports (-webkit-appearance: none) {
+  .MuiOutlinedInput-notchedOutline legend {
+    visibility: visible !important;
+  }
+}
