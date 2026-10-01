@@ -1,15 +1,18 @@
 import { CalendarMonth, Event, Groups, Home } from "@mui/icons-material";
 
 import {
+  BottomNavigation,
+  BottomNavigationAction,
   Box,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Paper,
   Typography,
 } from "@mui/material";
 
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const sidebarWidth = 240;
 
@@ -37,23 +40,67 @@ const navigation = [
 ];
 
 export const AppLayout = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
-        display: "flex",
         minHeight: "100vh",
         backgroundColor: "#f7f8fa",
       }}
     >
+      {/* Mobile header */}
+      <Box
+        component="header"
+        sx={{
+          display: {
+            xs: "flex",
+            md: "none",
+          },
+
+          alignItems: "center",
+          height: 56,
+          px: 2,
+
+          borderBottom: "1px solid",
+          borderColor: "divider",
+
+          backgroundColor: "background.paper",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 700,
+          }}
+        >
+          ASVK Schedule
+        </Typography>
+      </Box>
+
+      {/* Desktop sidebar */}
       <Box
         component="aside"
         sx={{
+          display: {
+            xs: "none",
+            md: "block",
+          },
+
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+
           width: sidebarWidth,
-          flexShrink: 0,
+
+          p: 2,
+
           borderRight: "1px solid",
           borderColor: "divider",
+
           backgroundColor: "background.paper",
-          p: 2,
         }}
       >
         <Typography
@@ -88,7 +135,7 @@ export const AppLayout = () => {
                 borderRadius: 2,
 
                 "&.active": {
-                  backgroundColor: "primary.50",
+                  backgroundColor: "action.selected",
                   color: "primary.main",
                 },
               }}
@@ -108,15 +155,63 @@ export const AppLayout = () => {
         </List>
       </Box>
 
+      {/* Page */}
       <Box
         component="main"
         sx={{
-          flex: 1,
-          p: 4,
+          ml: {
+            xs: 0,
+            md: `${sidebarWidth}px`,
+          },
+
+          p: {
+            xs: 2,
+            md: 4,
+          },
+
+          pb: {
+            xs: 10,
+            md: 4,
+          },
         }}
       >
         <Outlet />
       </Box>
+
+      {/* Mobile navigation */}
+      <Paper
+        elevation={8}
+        sx={{
+          display: {
+            xs: "block",
+            md: "none",
+          },
+
+          position: "fixed",
+          right: 0,
+          bottom: 0,
+          left: 0,
+
+          zIndex: 1000,
+        }}
+      >
+        <BottomNavigation
+          value={location.pathname}
+          onChange={(_, value: string) => {
+            navigate(value);
+          }}
+          showLabels
+        >
+          {navigation.map((item) => (
+            <BottomNavigationAction
+              key={item.path}
+              value={item.path}
+              label={item.label}
+              icon={item.icon}
+            />
+          ))}
+        </BottomNavigation>
+      </Paper>
     </Box>
   );
 };
