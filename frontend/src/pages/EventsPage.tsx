@@ -4,21 +4,28 @@ import {
   LocationOn,
   Repeat,
   Search,
+  Tune,
   Videocam,
 } from "@mui/icons-material";
 
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
+  Drawer,
   IconButton,
   InputAdornment,
+  MenuItem,
+  Paper,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 
@@ -27,7 +34,10 @@ import { useState } from "react";
 
 import { getEvents } from "../api/events";
 import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
-import type { Event, RepeatInterval } from "../types/Event";
+import type { Event, EventFormat, RepeatInterval } from "../types/Event";
+
+type FormatFilter = "ALL" | EventFormat;
+type RepeatFilter = "ALL" | RepeatInterval;
 
 const repeatLabels: Record<RepeatInterval, string> = {
   NONE: "Не повторяется",
@@ -85,6 +95,9 @@ const EventPlace = ({ event }: { event: Event }) => {
 export const EventsPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>("ALL");
+  const [repeatFilter, setRepeatFilter] = useState<RepeatFilter>("ALL");
 
   const {
     data: events = [],
@@ -102,12 +115,10 @@ export const EventsPage = () => {
   );
 
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase("ru-RU");
+  const activeFiltersCount =
+    Number(formatFilter !== "ALL") + Number(repeatFilter !== "ALL");
 
   const filteredEvents = sortedEvents.filter((event) => {
-    if (!normalizedQuery) {
-      return true;
-    }
-
     const searchableText = [
       event.title,
       event.description,
@@ -118,8 +129,20 @@ export const EventsPage = () => {
       .join(" ")
       .toLocaleLowerCase("ru-RU");
 
-    return searchableText.includes(normalizedQuery);
+    const matchesSearch =
+      !normalizedQuery || searchableText.includes(normalizedQuery);
+    const matchesFormat =
+      formatFilter === "ALL" || event.format === formatFilter;
+    const matchesRepeat =
+      repeatFilter === "ALL" || event.repeatInterval === repeatFilter;
+
+    return matchesSearch && matchesFormat && matchesRepeat;
   });
+
+  const resetFilters = () => {
+    setFormatFilter("ALL");
+    setRepeatFilter("ALL");
+  };
 
   return (
     <Stack
@@ -164,38 +187,8 @@ export const EventsPage = () => {
         </Box>
 
         {!isLoading && !isError && sortedEvents.length > 0 && (
-          <TextField
-            type="text"
-            label="Поиск событий"
-            placeholder="Название, описание или место"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            autoComplete="off"
-            fullWidth
-            slotProps={{
-              htmlInput: {
-                inputMode: "search",
-                enterKeyHint: "search",
-              },
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: searchQuery ? (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      aria-label="Очистить поиск"
-                      onClick={() => setSearchQuery("")}
-                    >
-                      <Close />
-                    </IconButton>
-                  </InputAdornment>
-                ) : undefined,
-              },
-            }}
+          <Stack
+            spacing={1}
             sx={{
               width: {
                 xs: "100%",
@@ -203,9 +196,124 @@ export const EventsPage = () => {
               },
               flexShrink: 0,
             }}
-          />
+          >
+            <TextField
+              type="text"
+              label="Поиск событий"
+              placeholder="Название, описание или место"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              autoComplete="off"
+              fullWidth
+              slotProps={{
+                htmlInput: {
+                  inputMode: "search",
+                  enterKeyHint: "search",
+                },
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        edge="end"
+                        aria-label="Очистить поиск"
+                        onClick={() => setSearchQuery("")}
+                      >
+                        <Close />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : undefined,
+                },
+              }}
+            />
+
+            <Button
+              variant={activeFiltersCount > 0 ? "contained" : "outlined"}
+              startIcon={<Tune />}
+              onClick={() => setFiltersOpen(true)}
+              sx={{
+                display: {
+                  xs: "inline-flex",
+                  lg: "none",
+                },
+              }}
+            >
+              {activeFiltersCount > 0
+                ? `Фильтры (${activeFiltersCount})`
+                : "Фильтры"}
+            </Button>
+          </Stack>
         )}
       </Stack>
+
+      {!isLoading && !isError && sortedEvents.length > 0 && (
+        <Paper
+          variant="outlined"
+          sx={{
+            display: {
+              xs: "none",
+              lg: "flex",
+            },
+            alignItems: "center",
+            gap: 1.5,
+            p: 1.5,
+            borderRadius: 3,
+          }}
+        >
+          <Tune color="action" />
+
+          <TextField
+            select
+            label="Формат"
+            value={formatFilter}
+            onChange={(event) =>
+              setFormatFilter(event.target.value as FormatFilter)
+            }
+            size="small"
+            sx={{ width: 180 }}
+          >
+            <MenuItem value="ALL">Все форматы</MenuItem>
+            <MenuItem value="OFFLINE">Очно</MenuItem>
+            <MenuItem value="ONLINE">Онлайн</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Повторение"
+            value={repeatFilter}
+            onChange={(event) =>
+              setRepeatFilter(event.target.value as RepeatFilter)
+            }
+            size="small"
+            sx={{ width: 220 }}
+          >
+            <MenuItem value="ALL">Любое повторение</MenuItem>
+            <MenuItem value="NONE">Не повторяется</MenuItem>
+            <MenuItem value="WEEK">Раз в неделю</MenuItem>
+            <MenuItem value="TWO_WEEKS">Раз в две недели</MenuItem>
+            <MenuItem value="MONTH">Раз в месяц</MenuItem>
+          </TextField>
+
+          <Button
+            onClick={resetFilters}
+            disabled={activeFiltersCount === 0}
+          >
+            Сбросить
+          </Button>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ ml: "auto" }}
+          >
+            Найдено: {filteredEvents.length}
+          </Typography>
+        </Paper>
+      )}
 
       {isLoading && (
         <Box
@@ -253,7 +361,7 @@ export const EventsPage = () => {
                   textAlign: "center",
                 }}
               >
-                По вашему запросу ничего не найдено
+                По заданным параметрам ничего не найдено
               </Typography>
             </CardContent>
           </Card>
@@ -368,6 +476,111 @@ export const EventsPage = () => {
           onEventUpdated={setSelectedEvent}
         />
       )}
+
+      <Drawer
+        anchor="bottom"
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: "100%",
+              maxWidth: 600,
+              mx: "auto",
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+            },
+          },
+        }}
+      >
+        <Box
+          sx={{
+            p: 2,
+            pb: "max(16px, env(safe-area-inset-bottom))",
+          }}
+        >
+          <Stack spacing={2.5}>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Фильтры
+              </Typography>
+
+              <IconButton
+                onClick={() => setFiltersOpen(false)}
+                aria-label="Закрыть фильтры"
+              >
+                <Close />
+              </IconButton>
+            </Stack>
+
+            <Box>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 1 }}
+              >
+                Формат
+              </Typography>
+
+              <ToggleButtonGroup
+                value={formatFilter}
+                exclusive
+                onChange={(_, value: FormatFilter | null) => {
+                  if (value) {
+                    setFormatFilter(value);
+                  }
+                }}
+                fullWidth
+              >
+                <ToggleButton value="ALL">Все</ToggleButton>
+                <ToggleButton value="OFFLINE">Очно</ToggleButton>
+                <ToggleButton value="ONLINE">Онлайн</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
+            <TextField
+              select
+              label="Повторение"
+              value={repeatFilter}
+              onChange={(event) =>
+                setRepeatFilter(event.target.value as RepeatFilter)
+              }
+              fullWidth
+            >
+              <MenuItem value="ALL">Любое</MenuItem>
+              <MenuItem value="NONE">Не повторяется</MenuItem>
+              <MenuItem value="WEEK">Раз в неделю</MenuItem>
+              <MenuItem value="TWO_WEEKS">Раз в две недели</MenuItem>
+              <MenuItem value="MONTH">Раз в месяц</MenuItem>
+            </TextField>
+
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={resetFilters}
+                disabled={activeFiltersCount === 0}
+              >
+                Сбросить
+              </Button>
+
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => setFiltersOpen(false)}
+              >
+                Готово
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
+      </Drawer>
     </Stack>
   );
 };
