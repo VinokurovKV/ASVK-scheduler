@@ -23,6 +23,13 @@ enum EventFormat {
   OFFLINE
 }
 
+enum EventType {
+  LECTURE
+  SEMINAR
+  WORK_MEETING
+  MEETING
+}
+
 enum RepeatInterval {
   NONE
   WEEK
@@ -71,6 +78,7 @@ model Event {
   startsAt DateTime
   endsAt   DateTime
 
+  eventType      EventType      @default(MEETING)
   format         EventFormat
   repeatInterval RepeatInterval @default(NONE)
   room           String?

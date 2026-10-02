@@ -70,6 +70,7 @@ export class EventsService {
         startsAt,
         endsAt,
 
+        eventType: input.eventType ?? 'MEETING',
         format: input.format,
         repeatInterval: input.repeatInterval ?? 'NONE',
 
@@ -141,6 +142,7 @@ export class EventsService {
         startsAt,
         endsAt,
 
+        eventType: input.eventType,
         format,
         repeatInterval: input.repeatInterval,
 

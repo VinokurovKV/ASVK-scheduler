@@ -35,6 +35,7 @@ async function main() {
     data: [
       {
         title: 'Компиляторы',
+        eventType: 'LECTURE',
         startsAt: new Date('2026-10-05T10:30:00+03:00'),
         endsAt: new Date('2026-10-05T12:05:00+03:00'),
         format: 'OFFLINE',
@@ -45,6 +46,7 @@ async function main() {
 
       {
         title: 'Научный семинар',
+        eventType: 'SEMINAR',
         startsAt: new Date('2026-10-07T12:20:00+03:00'),
         endsAt: new Date('2026-10-07T13:55:00+03:00'),
         format: 'OFFLINE',
@@ -55,6 +57,7 @@ async function main() {
 
       {
         title: 'Встреча научной группы',
+        eventType: 'MEETING',
         startsAt: new Date('2026-10-08T15:00:00+03:00'),
         endsAt: new Date('2026-10-08T16:30:00+03:00'),
         format: 'ONLINE',
@@ -65,6 +68,7 @@ async function main() {
 
       {
         title: 'Лекторий «Кругозор»',
+        eventType: 'LECTURE',
         startsAt: new Date('2026-10-09T18:00:00+03:00'),
         endsAt: new Date('2026-10-09T19:30:00+03:00'),
         format: 'OFFLINE',
