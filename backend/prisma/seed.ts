@@ -19,7 +19,9 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       name: 'Кирилл Винокуров',
-      email: 'kirill@example.com',
+      username: 'kirill',
+      email: 'kirill@asvk.cs.msu.ru',
+      authProvider: 'ASVK',
     },
   });
 

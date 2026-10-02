@@ -18,6 +18,11 @@ enum CalendarType {
   DEPARTMENT
 }
 
+enum AuthProvider {
+  STANDARD
+  ASVK
+}
+
 enum EventFormat {
   ONLINE
   OFFLINE
@@ -43,17 +48,60 @@ enum ParticipantStatus {
   DECLINED
 }
 
+enum UserRole {
+  BACHELOR_STUDENT
+  MASTER_STUDENT
+  POSTGRADUATE
+  EMPLOYEE
+}
+
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id           Int          @id @default(autoincrement())
+
+  name         String
+  firstName    String?
+  lastName     String?
+
+  username     String?      @unique
+  email        String       @unique
+
+  role         UserRole?
+  groupNumber  String?
+
+  authProvider AuthProvider @default(STANDARD)
 
   calendars      Calendar[]
   createdEvents  Event[]            @relation("EventCreator")
   participations EventParticipant[]
+  credential     PasswordCredential?
+  sessions       AuthSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PasswordCredential {
+  userId       Int    @id
+  passwordHash String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuthSession {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Calendar {
