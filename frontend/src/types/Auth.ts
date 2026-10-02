@@ -46,3 +46,14 @@ export interface LoginInput {
 
   rememberMe?: boolean;
 }
+
+export interface UpdateProfileInput {
+  firstName: string;
+  lastName: string;
+
+  username: string;
+  email: string;
+
+  role: UserRole;
+  groupNumber?: string;
+}
