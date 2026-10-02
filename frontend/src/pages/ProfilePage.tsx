@@ -1,5 +1,4 @@
 import {
-  ArrowBack,
   CheckRounded,
   CloseRounded,
   DeleteOutlined,
@@ -25,8 +24,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { type MouseEvent, useRef, useState } from "react";
-
-import { useNavigate } from "react-router-dom";
 
 import { AuthApiError, getCurrentUser, updateCurrentUser } from "../api/auth";
 
@@ -72,7 +69,6 @@ interface ErrorToast {
 
 interface ProfileContentProps {
   user: AuthUser;
-  onBack: () => void;
 }
 
 const getFieldStyles = (isEditing: boolean) => ({
@@ -191,8 +187,6 @@ const getFieldForMessage = (message: string): ProfileField | null => {
 };
 
 export const ProfilePage = () => {
-  const navigate = useNavigate();
-
   const { data: user, isLoading } = useQuery({
     queryKey: AUTH_QUERY_KEY,
     queryFn: getCurrentUser,
@@ -212,12 +206,10 @@ export const ProfilePage = () => {
     );
   }
 
-  return (
-    <ProfileContent key={user.id} user={user} onBack={() => navigate(-1)} />
-  );
+  return <ProfileContent key={user.id} user={user} />;
 };
 
-const ProfileContent = ({ user, onBack }: ProfileContentProps) => {
+const ProfileContent = ({ user }: ProfileContentProps) => {
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -506,73 +498,23 @@ const ProfileContent = ({ user, onBack }: ProfileContentProps) => {
   return (
     <Box
       sx={{
-        minHeight: "100dvh",
+        minHeight: {
+          xs: "calc(100dvh - 56px)",
+          md: "100dvh",
+        },
+
         bgcolor: "#F7F8FA",
       }}
     >
-      {/* Верхняя панель */}
-      <Box
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1100,
-
-          display: "grid",
-          gridTemplateColumns: "48px 1fr 48px",
-
-          minHeight: 60,
-
-          alignItems: "center",
-
-          px: 1,
-
-          bgcolor: NAVY,
-          color: "white",
-        }}
-      >
-        <IconButton
-          onClick={onBack}
-          aria-label="Назад"
-          sx={{
-            color: "inherit",
-          }}
-        >
-          <ArrowBack />
-        </IconButton>
-
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 600,
-            textAlign: "center",
-          }}
-        >
-          Профиль
-        </Typography>
-
-        <Avatar
-          sx={{
-            width: 32,
-            height: 32,
-
-            justifySelf: "center",
-
-            bgcolor: LIGHT_NAVY,
-            color: NAVY,
-
-            fontSize: "0.8rem",
-            fontWeight: 700,
-          }}
-        >
-          {initials}
-        </Avatar>
-      </Box>
-
       {/* Закреплённый профиль */}
       <Box
         sx={{
           position: "sticky",
-          top: 60,
+
+          top: {
+            xs: 56,
+            md: 0,
+          },
           zIndex: 1000,
 
           bgcolor: "#F7F8FA",
