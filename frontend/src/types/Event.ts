@@ -1,4 +1,5 @@
 export type EventFormat = "ONLINE" | "OFFLINE";
+export type EventType = "LECTURE" | "SEMINAR" | "WORK_MEETING" | "MEETING";
 export type RepeatInterval = "NONE" | "WEEK" | "TWO_WEEKS" | "MONTH";
 
 export interface Calendar {
@@ -22,6 +23,7 @@ export interface Event {
   startsAt: string;
   endsAt: string;
 
+  eventType: EventType;
   format: EventFormat;
   repeatInterval: RepeatInterval;
 
@@ -42,6 +44,7 @@ export interface CreateEventInput {
   startsAt: string;
   endsAt: string;
 
+  eventType: EventType;
   format: EventFormat;
   repeatInterval: RepeatInterval;
 
@@ -59,6 +62,7 @@ export interface UpdateEventInput {
   startsAt: string;
   endsAt: string;
 
+  eventType: EventType;
   format: EventFormat;
   repeatInterval: RepeatInterval;
 

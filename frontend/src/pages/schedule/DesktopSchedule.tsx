@@ -8,6 +8,10 @@ import {
 import { Box, IconButton, Paper, Stack, Typography } from "@mui/material";
 
 import type { Event } from "../../types/Event";
+import {
+  eventTypeStyles,
+  eventTypeTextColor,
+} from "../../constants/events";
 
 import {
   addDays,
@@ -273,9 +277,13 @@ export const DesktopSchedule = ({
 
                         overflow: "hidden",
 
-                        backgroundColor: "primary.main",
+                        backgroundColor:
+                          eventTypeStyles[event.eventType].surface,
 
-                        color: "primary.contrastText",
+                        borderLeft: 4,
+                        borderLeftColor: eventTypeStyles[event.eventType].main,
+
+                        color: eventTypeTextColor,
 
                         boxShadow: 1,
 

@@ -54,6 +54,7 @@ export const CreateEventDialog = ({
         description: "",
         startsAt: start.toISOString(),
         endsAt: end.toISOString(),
+        eventType: "MEETING",
         format: "OFFLINE",
         repeatInterval: "WEEK",
         room: "",

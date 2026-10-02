@@ -16,6 +16,11 @@ import {
 } from "@mui/material";
 
 import type { Event } from "../../types/Event";
+import {
+  eventTypeLabels,
+  eventTypeLabelTextColor,
+  eventTypeStyles,
+} from "../../constants/events";
 
 import {
   addDays,
@@ -130,7 +135,7 @@ export const MobileSchedule = ({
 
           const isToday = isSameDay(date, today);
 
-          const hasEvents = events.some((event) =>
+          const dayEvents = events.filter((event) =>
             isSameDay(new Date(event.startsAt), date),
           );
 
@@ -172,19 +177,29 @@ export const MobileSchedule = ({
 
               <Box
                 sx={{
-                  width: 4,
-                  height: 4,
-                  mx: "auto",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  gap: 0.25,
+                  minHeight: 4,
                   mt: 0.5,
-                  borderRadius: "50%",
-
-                  backgroundColor: hasEvents
-                    ? selected
-                      ? "primary.contrastText"
-                      : "primary.main"
-                    : "transparent",
                 }}
-              />
+              >
+                {dayEvents.map((event) => (
+                  <Box
+                    key={`${event.id}-${event.startsAt}`}
+                    sx={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      backgroundColor: eventTypeStyles[event.eventType].main,
+                      boxShadow: selected
+                        ? "0 0 0 1px rgba(255, 255, 255, 0.9)"
+                        : "none",
+                    }}
+                  />
+                ))}
+              </Box>
             </Box>
           );
         })}
@@ -229,6 +244,9 @@ export const MobileSchedule = ({
                 variant="outlined"
                 sx={{
                   borderRadius: 3,
+                  borderLeftWidth: 4,
+                  borderLeftColor: eventTypeStyles[event.eventType].main,
+                  backgroundColor: eventTypeStyles[event.eventType].surface,
                 }}
               >
                 <CardContent>
@@ -266,8 +284,13 @@ export const MobileSchedule = ({
                       </Box>
 
                       <Chip
-                        label={event.format === "ONLINE" ? "Онлайн" : "Очно"}
+                        label={eventTypeLabels[event.eventType]}
                         size="small"
+                        sx={{
+                          backgroundColor: eventTypeStyles[event.eventType].main,
+                          color: eventTypeLabelTextColor,
+                          fontWeight: 600,
+                        }}
                       />
                     </Stack>
 

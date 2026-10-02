@@ -34,6 +34,11 @@ import { useState } from "react";
 
 import { getEvents } from "../api/events";
 import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
+import {
+  eventTypeLabels,
+  eventTypeLabelTextColor,
+  eventTypeStyles,
+} from "../constants/events";
 import type { Event, EventFormat, RepeatInterval } from "../types/Event";
 
 type FormatFilter = "ALL" | EventFormat;
@@ -388,7 +393,12 @@ export const EventsPage = () => {
               component="li"
               key={event.id}
               variant="outlined"
-              sx={{ borderRadius: 3 }}
+              sx={{
+                borderRadius: 3,
+                borderLeftWidth: 4,
+                borderLeftColor: eventTypeStyles[event.eventType].main,
+                backgroundColor: eventTypeStyles[event.eventType].surface,
+              }}
             >
               <CardActionArea
                 onClick={() => setSelectedEvent(event)}
@@ -429,8 +439,13 @@ export const EventsPage = () => {
                       </Box>
 
                       <Chip
-                        label={event.format === "ONLINE" ? "Онлайн" : "Очно"}
+                        label={eventTypeLabels[event.eventType]}
                         size="small"
+                        sx={{
+                          backgroundColor: eventTypeStyles[event.eventType].main,
+                          color: eventTypeLabelTextColor,
+                          fontWeight: 600,
+                        }}
                       />
                     </Stack>
 

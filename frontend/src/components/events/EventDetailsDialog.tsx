@@ -33,6 +33,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { deleteEvent } from "../../api/events";
+import {
+  eventTypeLabels,
+  eventTypeLabelTextColor,
+  eventTypeStyles,
+} from "../../constants/events";
 import type { Event, RepeatInterval } from "../../types/Event";
 import { EditEventDialog } from "./EditEventDialog";
 
@@ -196,8 +201,29 @@ export const EventDetailsDialog = ({
               {event.title}
             </Typography>
 
-            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-              <Chip label={online ? "Онлайн" : "Очно"} size="small" />
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                mt: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <Chip
+                label={eventTypeLabels[event.eventType]}
+                size="small"
+                sx={{
+                  backgroundColor: eventTypeStyles[event.eventType].main,
+                  color: eventTypeLabelTextColor,
+                  fontWeight: 600,
+                }}
+              />
+              <Chip
+                label={online ? "Онлайн" : "Очно"}
+                size="small"
+                variant="outlined"
+              />
               <Chip
                 label={repeatLabels[event.repeatInterval]}
                 size="small"

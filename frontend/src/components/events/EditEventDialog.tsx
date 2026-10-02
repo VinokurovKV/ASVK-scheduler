@@ -47,6 +47,7 @@ export const EditEventDialog = ({
         description: event.description ?? "",
         startsAt: event.startsAt,
         endsAt: event.endsAt,
+        eventType: event.eventType,
         format: event.format,
         repeatInterval: event.repeatInterval,
         room: event.room ?? "",

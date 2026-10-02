@@ -13,8 +13,15 @@ import {
 } from "@mui/material";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { getEvents } from "../api/events";
+import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
+import {
+  eventTypeLabels,
+  eventTypeLabelTextColor,
+  eventTypeStyles,
+} from "../constants/events";
 import type { Event } from "../types/Event";
 
 const isSameDay = (first: Date, second: Date) => {
@@ -72,6 +79,8 @@ const EventLocation = ({ event }: { event: Event }) => {
 };
 
 export const HomePage = () => {
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
   const {
     data: events = [],
     isLoading,
@@ -156,6 +165,9 @@ export const HomePage = () => {
           <Card
             variant="outlined"
             sx={{
+              bgcolor: eventTypeStyles[nextEvent.eventType].surface,
+              borderLeft: 4,
+              borderLeftColor: eventTypeStyles[nextEvent.eventType].main,
               borderRadius: 3,
             }}
           >
@@ -180,8 +192,12 @@ export const HomePage = () => {
                     </Typography>
 
                     <Chip
-                      label={nextEvent.format === "ONLINE" ? "Онлайн" : "Очно"}
+                      label={eventTypeLabels[nextEvent.eventType]}
                       size="small"
+                      sx={{
+                        bgcolor: eventTypeStyles[nextEvent.eventType].main,
+                        color: eventTypeLabelTextColor,
+                      }}
                     />
                   </Stack>
 
@@ -221,11 +237,31 @@ export const HomePage = () => {
                     fullWidth
                     href={nextEvent.meetingUrl}
                     target="_blank"
+                    sx={{
+                      bgcolor: eventTypeStyles[nextEvent.eventType].main,
+                      color: eventTypeLabelTextColor,
+                      "&:hover": {
+                        bgcolor: eventTypeStyles[nextEvent.eventType].main,
+                        filter: "brightness(0.9)",
+                      },
+                    }}
                   >
                     Присоединиться
                   </Button>
                 ) : (
-                  <Button variant="contained" fullWidth>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={() => setSelectedEvent(nextEvent)}
+                    sx={{
+                      bgcolor: eventTypeStyles[nextEvent.eventType].main,
+                      color: eventTypeLabelTextColor,
+                      "&:hover": {
+                        bgcolor: eventTypeStyles[nextEvent.eventType].main,
+                        filter: "brightness(0.9)",
+                      },
+                    }}
+                  >
                     Подробнее
                   </Button>
                 )}
@@ -291,18 +327,40 @@ export const HomePage = () => {
                 key={event.id}
                 variant="outlined"
                 sx={{
+                  bgcolor: eventTypeStyles[event.eventType].surface,
+                  borderLeft: 4,
+                  borderLeftColor: eventTypeStyles[event.eventType].main,
                   borderRadius: 3,
                 }}
               >
                 <CardContent>
                   <Stack spacing={1}>
-                    <Typography
+                    <Stack
+                      direction="row"
+                      spacing={1}
                       sx={{
-                        fontWeight: 600,
+                        alignItems: "flex-start",
+                        justifyContent: "space-between",
                       }}
                     >
-                      {event.title}
-                    </Typography>
+                      <Typography
+                        sx={{
+                          fontWeight: 600,
+                        }}
+                      >
+                        {event.title}
+                      </Typography>
+
+                      <Chip
+                        label={eventTypeLabels[event.eventType]}
+                        size="small"
+                        sx={{
+                          bgcolor: eventTypeStyles[event.eventType].main,
+                          color: eventTypeLabelTextColor,
+                          flexShrink: 0,
+                        }}
+                      />
+                    </Stack>
 
                     <Typography variant="body2" color="text.secondary">
                       {formatTime(event.startsAt)}
@@ -318,6 +376,14 @@ export const HomePage = () => {
           </Stack>
         )}
       </Box>
+
+      {selectedEvent && (
+        <EventDetailsDialog
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onEventUpdated={setSelectedEvent}
+        />
+      )}
     </Stack>
   );
 };

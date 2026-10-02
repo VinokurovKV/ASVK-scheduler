@@ -20,7 +20,11 @@ import {
 
 import { useState } from "react";
 
-import type { EventFormat, RepeatInterval } from "../../types/Event";
+import type {
+  EventFormat,
+  EventType,
+  RepeatInterval,
+} from "../../types/Event";
 import { TimeInput } from "./TimeInput";
 
 export interface EventFormValues {
@@ -28,6 +32,7 @@ export interface EventFormValues {
   description: string;
   startsAt: string;
   endsAt: string;
+  eventType: EventType;
   format: EventFormat;
   repeatInterval: RepeatInterval;
   room?: string;
@@ -106,6 +111,7 @@ export const EventFormDialog = ({
   const [endMinutes, setEndMinutes] = useState(
     formatTimePart(initialEnd.getMinutes()),
   );
+  const [eventType, setEventType] = useState(initialValues.eventType);
   const [repeatInterval, setRepeatInterval] = useState(
     initialValues.repeatInterval,
   );
@@ -151,6 +157,7 @@ export const EventFormDialog = ({
       description: description.trim(),
       startsAt: startDate.toISOString(),
       endsAt: endDate.toISOString(),
+      eventType,
       format,
       repeatInterval,
       room: format === "OFFLINE" ? room.trim() : undefined,
@@ -239,6 +246,7 @@ export const EventFormDialog = ({
                 xs: `
                   "title"
                   "description"
+                  "eventType"
                   "date"
                   "time"
                   "repeat"
@@ -248,7 +256,8 @@ export const EventFormDialog = ({
                 lg: `
                   "title title"
                   "description description"
-                  "date repeat"
+                  "eventType repeat"
+                  "date date"
                   "time time"
                   "format format"
                   "location location"
@@ -275,6 +284,22 @@ export const EventFormDialog = ({
               fullWidth
               sx={{ gridArea: "description" }}
             />
+
+            <TextField
+              select
+              label="Тип события"
+              value={eventType}
+              onChange={(event) =>
+                setEventType(event.target.value as EventType)
+              }
+              fullWidth
+              sx={{ gridArea: "eventType" }}
+            >
+              <MenuItem value="LECTURE">Лекция</MenuItem>
+              <MenuItem value="SEMINAR">Семинар</MenuItem>
+              <MenuItem value="WORK_MEETING">Совещание</MenuItem>
+              <MenuItem value="MEETING">Встреча</MenuItem>
+            </TextField>
 
             <TextField
               label="Дата"
