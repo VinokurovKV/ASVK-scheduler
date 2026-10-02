@@ -6,7 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
-import type { LoginInput, RegisterInput } from './auth.types.js';
+import type {
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from './auth.types.js';
 import { hashPassword, verifyPassword } from './password.js';
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -273,5 +277,143 @@ export class AuthService {
         tokenHash: hashSessionToken(token),
       },
     });
+  }
+
+  async updateProfile(userId: number, input: UpdateProfileInput) {
+    const firstName = normalizeString(input.firstName);
+
+    const lastName = normalizeString(input.lastName);
+
+    const name = `${firstName} ${lastName}`;
+
+    const username = normalizeIdentifier(input.username);
+
+    const email = normalizeIdentifier(input.email);
+
+    if (!firstName || firstName.length > 50) {
+      throw new BadRequestException('First name has an invalid format');
+    }
+
+    if (!lastName || lastName.length > 50) {
+      throw new BadRequestException('Last name has an invalid format');
+    }
+
+    if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+      throw new BadRequestException('Username has an invalid format');
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      throw new BadRequestException('Email has an invalid format');
+    }
+
+    const allowedRoles = new Set([
+      'BACHELOR_STUDENT',
+      'MASTER_STUDENT',
+      'POSTGRADUATE',
+      'EMPLOYEE',
+    ]);
+
+    if (!allowedRoles.has(input.role)) {
+      throw new BadRequestException('Role has an invalid value');
+    }
+
+    const isStudent =
+      input.role === 'BACHELOR_STUDENT' || input.role === 'MASTER_STUDENT';
+
+    const groupNumber = isStudent ? normalizeString(input.groupNumber) : null;
+
+    const allowedGroups = new Set(['321', '421', '521', '621']);
+
+    if (isStudent && !allowedGroups.has(groupNumber ?? '')) {
+      throw new BadRequestException('Student group has an invalid value');
+    }
+
+    const [userWithSameUsername, userWithSameEmail] = await Promise.all([
+      this.prisma.user.findFirst({
+        where: {
+          username,
+          id: {
+            not: userId,
+          },
+        },
+
+        select: {
+          id: true,
+        },
+      }),
+
+      this.prisma.user.findFirst({
+        where: {
+          email,
+          id: {
+            not: userId,
+          },
+        },
+
+        select: {
+          id: true,
+        },
+      }),
+    ]);
+
+    const conflicts: Array<{
+      field: 'username' | 'email';
+      message: string;
+    }> = [];
+
+    if (userWithSameUsername) {
+      conflicts.push({
+        field: 'username',
+        message: 'Username is already in use',
+      });
+    }
+
+    if (userWithSameEmail) {
+      conflicts.push({
+        field: 'email',
+        message: 'Email is already in use',
+      });
+    }
+
+    if (conflicts.length > 0) {
+      throw new ConflictException({
+        message: 'Profile data conflict',
+        errors: conflicts,
+      });
+    }
+
+    try {
+      return await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+
+        data: {
+          name,
+
+          firstName,
+          lastName,
+
+          username,
+          email,
+
+          role: input.role,
+          groupNumber,
+        },
+
+        select: publicUserSelect,
+      });
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Username or email is already in use');
+      }
+
+      throw error;
+    }
   }
 }

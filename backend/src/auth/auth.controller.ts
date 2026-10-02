@@ -4,13 +4,18 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import type { LoginInput, RegisterInput } from './auth.types.js';
+import type {
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from './auth.types.js';
 import { AuthService } from './auth.service.js';
 
 const SESSION_COOKIE_NAME = 'asvk_session';
@@ -109,5 +114,18 @@ export class AuthController {
     }
 
     return this.authService.findUserBySession(token);
+  }
+
+  @Patch('me')
+  async updateMe(@Req() request: Request, @Body() body: UpdateProfileInput) {
+    const token = getCookie(request, SESSION_COOKIE_NAME);
+
+    if (!token) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    const user = await this.authService.findUserBySession(token);
+
+    return this.authService.updateProfile(user.id, body);
   }
 }

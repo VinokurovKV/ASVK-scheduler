@@ -21,3 +21,14 @@ export interface LoginInput {
   password: string;
   rememberMe?: boolean;
 }
+
+export interface UpdateProfileInput {
+  firstName: string;
+  lastName: string;
+
+  username: string;
+  email: string;
+
+  role: UserRole;
+  groupNumber?: string;
+}
