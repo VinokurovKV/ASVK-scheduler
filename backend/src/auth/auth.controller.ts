@@ -8,62 +8,38 @@ import {
   Post,
   Req,
   Res,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import type { AuthenticatedRequest } from './authenticated-request.js';
 import type {
   LoginInput,
   RegisterInput,
   UpdateProfileInput,
 } from './auth.types.js';
 import { AuthService } from './auth.service.js';
-
-const SESSION_COOKIE_NAME = 'asvk_session';
-
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  path: '/',
-};
-
-const getCookie = (request: Request, name: string) => {
-  const cookies = request.headers.cookie?.split(';') ?? [];
-
-  for (const cookie of cookies) {
-    const separatorIndex = cookie.indexOf('=');
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const cookieName = cookie.slice(0, separatorIndex).trim();
-
-    if (cookieName === name) {
-      return decodeURIComponent(cookie.slice(separatorIndex + 1).trim());
-    }
-  }
-
-  return null;
-};
+import { SessionAuthGuard } from './session-auth.guard.js';
+import {
+  getSessionToken,
+  SESSION_COOKIE_NAME,
+  sessionCookieOptions,
+} from './session-cookie.js';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @UseGuards(ThrottlerGuard)
   async register(
     @Body() body: RegisterInput,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.authService.register(body);
-    const session = await this.authService.createSession(
-      user.id,
-      body.rememberMe === true,
-    );
+    const { user, session } = await this.authService.register(body);
 
     response.cookie(SESSION_COOKIE_NAME, session.token, {
-      ...cookieOptions,
+      ...sessionCookieOptions,
       expires: session.persistent ? session.expiresAt : undefined,
     });
 
@@ -72,6 +48,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
   async login(
     @Body() body: LoginInput,
     @Res({ passthrough: true }) response: Response,
@@ -83,7 +60,7 @@ export class AuthController {
     );
 
     response.cookie(SESSION_COOKIE_NAME, session.token, {
-      ...cookieOptions,
+      ...sessionCookieOptions,
       expires: session.persistent ? session.expiresAt : undefined,
     });
 
@@ -96,36 +73,27 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const token = getCookie(request, SESSION_COOKIE_NAME);
+    const token = getSessionToken(request);
 
     if (token) {
       await this.authService.deleteSession(token);
     }
 
-    response.clearCookie(SESSION_COOKIE_NAME, cookieOptions);
+    response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
   }
 
   @Get('me')
-  me(@Req() request: Request) {
-    const token = getCookie(request, SESSION_COOKIE_NAME);
-
-    if (!token) {
-      throw new UnauthorizedException('Authentication required');
-    }
-
-    return this.authService.findUserBySession(token);
+  @UseGuards(SessionAuthGuard)
+  me(@Req() request: AuthenticatedRequest) {
+    return request.user;
   }
 
   @Patch('me')
-  async updateMe(@Req() request: Request, @Body() body: UpdateProfileInput) {
-    const token = getCookie(request, SESSION_COOKIE_NAME);
-
-    if (!token) {
-      throw new UnauthorizedException('Authentication required');
-    }
-
-    const user = await this.authService.findUserBySession(token);
-
-    return this.authService.updateProfile(user.id, body);
+  @UseGuards(SessionAuthGuard)
+  updateMe(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: UpdateProfileInput,
+  ) {
+    return this.authService.updateProfile(request.user.id, body);
   }
 }

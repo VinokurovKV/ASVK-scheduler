@@ -34,23 +34,37 @@ const validateEventDetails = (
   }
 };
 
+const eventInclude = {
+  calendar: true,
+  creator: {
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      authProvider: true,
+    },
+  },
+} as const;
+
 @Injectable()
 export class EventsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(userId: number) {
     return this.prisma.event.findMany({
+      where: {
+        calendar: {
+          ownerId: userId,
+        },
+      },
       orderBy: {
         startsAt: 'asc',
       },
-      include: {
-        calendar: true,
-        creator: true,
-      },
+      include: eventInclude,
     });
   }
 
-  create(input: CreateEventInput) {
+  async create(userId: number, input: CreateEventInput) {
     const startsAt = new Date(input.startsAt);
     const endsAt = new Date(input.endsAt);
 
@@ -61,6 +75,20 @@ export class EventsService {
       input.room,
       input.meetingUrl,
     );
+
+    const calendar = await this.prisma.calendar.findFirst({
+      where: {
+        ownerId: userId,
+        type: 'PERSONAL',
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!calendar) {
+      throw new NotFoundException('Personal calendar not found');
+    }
 
     return this.prisma.event.create({
       data: {
@@ -80,28 +108,28 @@ export class EventsService {
 
         calendar: {
           connect: {
-            id: input.calendarId,
+            id: calendar.id,
           },
         },
 
         creator: {
           connect: {
-            id: input.creatorId,
+            id: userId,
           },
         },
       },
 
-      include: {
-        calendar: true,
-        creator: true,
-      },
+      include: eventInclude,
     });
   }
 
-  async update(id: number, input: UpdateEventInput) {
-    const existingEvent = await this.prisma.event.findUnique({
+  async update(userId: number, id: number, input: UpdateEventInput) {
+    const existingEvent = await this.prisma.event.findFirst({
       where: {
         id,
+        calendar: {
+          ownerId: userId,
+        },
       },
     });
 
@@ -149,17 +177,17 @@ export class EventsService {
         room,
         meetingUrl,
       },
-      include: {
-        calendar: true,
-        creator: true,
-      },
+      include: eventInclude,
     });
   }
 
-  async remove(id: number) {
+  async remove(userId: number, id: number) {
     const result = await this.prisma.event.deleteMany({
       where: {
         id,
+        calendar: {
+          ownerId: userId,
+        },
       },
     });
 

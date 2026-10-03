@@ -11,10 +11,7 @@ export class UsersService {
         id: true,
         name: true,
         username: true,
-        email: true,
         authProvider: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
   }

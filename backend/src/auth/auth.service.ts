@@ -11,7 +11,11 @@ import type {
   RegisterInput,
   UpdateProfileInput,
 } from './auth.types.js';
-import { hashPassword, verifyPassword } from './password.js';
+import {
+  hashPassword,
+  passwordNeedsRehash,
+  verifyPassword,
+} from './password.js';
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 const REMEMBERED_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -58,11 +62,32 @@ const validatePassword = (password: string) => {
 const hashSessionToken = (token: string) =>
   createHash('sha256').update(token).digest('hex');
 
+const dummyPasswordHash = hashPassword(randomBytes(32).toString('base64url'));
+
+const createSessionDetails = (rememberMe: boolean) => {
+  const token = randomBytes(32).toString('base64url');
+  const duration = rememberMe
+    ? REMEMBERED_SESSION_DURATION_MS
+    : SESSION_DURATION_MS;
+  const expiresAt = new Date(Date.now() + duration);
+
+  return {
+    token,
+    expiresAt,
+    persistent: rememberMe,
+    tokenHash: hashSessionToken(token),
+  };
+};
+
 @Injectable()
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async register(input: RegisterInput) {
+    if (!input || typeof input !== 'object') {
+      throw new BadRequestException('Registration data is required');
+    }
+
     const firstName = normalizeString(input.firstName);
     const lastName = normalizeString(input.lastName);
 
@@ -128,9 +153,10 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(password);
+    const session = createSessionDetails(input.rememberMe === true);
 
     try {
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           name,
 
@@ -157,10 +183,26 @@ export class AuthService {
               type: 'PERSONAL',
             },
           },
+
+          sessions: {
+            create: {
+              tokenHash: session.tokenHash,
+              expiresAt: session.expiresAt,
+            },
+          },
         },
 
         select: publicUserSelect,
       });
+
+      return {
+        user,
+        session: {
+          token: session.token,
+          expiresAt: session.expiresAt,
+          persistent: session.persistent,
+        },
+      };
     } catch (error) {
       if (
         typeof error === 'object' &&
@@ -176,6 +218,10 @@ export class AuthService {
   }
 
   async login(input: LoginInput) {
+    if (!input || typeof input !== 'object') {
+      throw new UnauthorizedException('Invalid login or password');
+    }
+
     const login = normalizeIdentifier(input.login);
     const password = typeof input.password === 'string' ? input.password : '';
 
@@ -193,11 +239,23 @@ export class AuthService {
       },
     });
 
-    if (
-      !user?.credential ||
-      !(await verifyPassword(password, user.credential.passwordHash))
-    ) {
+    const passwordHash =
+      user?.credential?.passwordHash ?? (await dummyPasswordHash);
+    const passwordIsValid = await verifyPassword(password, passwordHash);
+
+    if (!user?.credential || !passwordIsValid) {
       throw new UnauthorizedException('Invalid login or password');
+    }
+
+    if (passwordNeedsRehash(user.credential.passwordHash)) {
+      await this.prisma.passwordCredential.update({
+        where: {
+          userId: user.id,
+        },
+        data: {
+          passwordHash: await hashPassword(password),
+        },
+      });
     }
 
     return {
@@ -221,24 +279,29 @@ export class AuthService {
   }
 
   async createSession(userId: number, rememberMe: boolean) {
-    const token = randomBytes(32).toString('base64url');
-    const duration = rememberMe
-      ? REMEMBERED_SESSION_DURATION_MS
-      : SESSION_DURATION_MS;
-    const expiresAt = new Date(Date.now() + duration);
+    const session = createSessionDetails(rememberMe);
 
-    await this.prisma.authSession.create({
-      data: {
-        tokenHash: hashSessionToken(token),
-        expiresAt,
-        userId,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.authSession.deleteMany({
+        where: {
+          expiresAt: {
+            lte: new Date(),
+          },
+        },
+      }),
+      this.prisma.authSession.create({
+        data: {
+          tokenHash: session.tokenHash,
+          expiresAt: session.expiresAt,
+          userId,
+        },
+      }),
+    ]);
 
     return {
-      token,
-      expiresAt,
-      persistent: rememberMe,
+      token: session.token,
+      expiresAt: session.expiresAt,
+      persistent: session.persistent,
     };
   }
 
@@ -258,7 +321,7 @@ export class AuthService {
 
     if (!session || session.expiresAt <= new Date()) {
       if (session) {
-        await this.prisma.authSession.delete({
+        await this.prisma.authSession.deleteMany({
           where: {
             id: session.id,
           },
@@ -280,6 +343,10 @@ export class AuthService {
   }
 
   async updateProfile(userId: number, input: UpdateProfileInput) {
+    if (!input || typeof input !== 'object') {
+      throw new BadRequestException('Profile data is required');
+    }
+
     const firstName = normalizeString(input.firstName);
 
     const lastName = normalizeString(input.lastName);
