@@ -20,13 +20,13 @@ import {
   Typography,
 } from "@mui/material";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { register } from "../api/auth";
+import { AuthApiError, register } from "../api/auth";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
 
 type UserRole =
@@ -38,6 +38,24 @@ type UserRole =
 const studentRoles: UserRole[] = ["BACHELOR_STUDENT", "MASTER_STUDENT"];
 
 const groups = ["321", "421", "521", "621"];
+
+const getRegisterErrorMessage = (error: Error) => {
+  if (error instanceof AuthApiError) {
+    if (error.status === 409) {
+      return "Пользователь с таким логином или почтой уже существует";
+    }
+
+    if (error.status === 429) {
+      return "Слишком много попыток. Попробуйте снова через минуту";
+    }
+
+    if (error.status === 400) {
+      return "Проверьте правильность заполнения формы";
+    }
+  }
+
+  return "Не удалось зарегистрироваться. Попробуйте ещё раз";
+};
 
 export const RegisterPage = () => {
   const [firstName, setFirstName] = useState("");
@@ -54,6 +72,8 @@ export const RegisterPage = () => {
   const [passwordRepeat, setPasswordRepeat] = useState("");
 
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  const errorToastTimerRef = useRef<number | null>(null);
 
   const isStudent = studentRoles.includes(role);
 
@@ -74,6 +94,36 @@ export const RegisterPage = () => {
 
   const queryClient = useQueryClient();
 
+  const hideErrorToast = () => {
+    if (errorToastTimerRef.current !== null) {
+      window.clearTimeout(errorToastTimerRef.current);
+      errorToastTimerRef.current = null;
+    }
+
+    setErrorToast(null);
+  };
+
+  const showErrorToast = (message: string) => {
+    if (errorToastTimerRef.current !== null) {
+      window.clearTimeout(errorToastTimerRef.current);
+    }
+
+    setErrorToast(message);
+
+    errorToastTimerRef.current = window.setTimeout(() => {
+      setErrorToast(null);
+      errorToastTimerRef.current = null;
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (errorToastTimerRef.current !== null) {
+        window.clearTimeout(errorToastTimerRef.current);
+      }
+    };
+  }, []);
+
   const registerMutation = useMutation({
     mutationFn: register,
 
@@ -83,6 +133,10 @@ export const RegisterPage = () => {
       navigate("/", {
         replace: true,
       });
+    },
+
+    onError: (error) => {
+      showErrorToast(getRegisterErrorMessage(error));
     },
   });
 
@@ -354,10 +408,6 @@ export const RegisterPage = () => {
                 }
               />
 
-              {registerMutation.isError && (
-                <Alert severity="error">{registerMutation.error.message}</Alert>
-              )}
-
               <Button
                 type="submit"
                 variant="contained"
@@ -394,6 +444,34 @@ export const RegisterPage = () => {
           </Typography>
         </Stack>
       </Paper>
+
+      {errorToast && (
+        <Box
+          sx={{
+            position: "fixed",
+            left: "50%",
+            bottom: 16,
+            zIndex: 2000,
+            width: "calc(100% - 32px)",
+            maxWidth: 440,
+            transform: "translateX(-50%)",
+            pointerEvents: "none",
+          }}
+        >
+          <Alert
+            severity="error"
+            variant="filled"
+            onClose={hideErrorToast}
+            sx={{
+              width: "100%",
+              boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+              pointerEvents: "auto",
+            }}
+          >
+            {errorToast}
+          </Alert>
+        </Box>
+      )}
     </Box>
   );
 };
