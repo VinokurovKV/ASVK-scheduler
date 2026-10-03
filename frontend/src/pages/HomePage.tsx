@@ -22,15 +22,11 @@ import {
   eventTypeLabelTextColor,
   eventTypeStyles,
 } from "../constants/events";
+import {
+  getEventsForDate,
+  getNextEventOccurrence,
+} from "./schedule/scheduleUtils";
 import type { Event } from "../types/Event";
-
-const isSameDay = (first: Date, second: Date) => {
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
-};
 
 const formatTime = (date: string) => {
   return new Intl.DateTimeFormat("ru-RU", {
@@ -98,11 +94,9 @@ export const HomePage = () => {
     weekday: "long",
   }).format(now);
 
-  const nextEvent = events.find((event) => new Date(event.startsAt) >= now);
+  const nextEvent = getNextEventOccurrence(events, now);
 
-  const todayEvents = events.filter((event) =>
-    isSameDay(new Date(event.startsAt), now),
-  );
+  const todayEvents = getEventsForDate(events, now);
 
   if (isLoading) {
     return (

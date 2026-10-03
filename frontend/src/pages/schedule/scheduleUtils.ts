@@ -79,6 +79,60 @@ const repeatsOnDate = (event: Event, date: Date) => {
   return date.getDate() === start.getDate();
 };
 
+export const getEventsForDate = (events: Event[], date: Date) => {
+  return events
+    .filter((event) => repeatsOnDate(event, date))
+    .map((event) => createOccurrence(event, date))
+    .sort(
+      (first, second) =>
+        new Date(first.startsAt).getTime() -
+        new Date(second.startsAt).getTime(),
+    );
+};
+
+const getNextOccurrence = (event: Event, from: Date) => {
+  const eventStart = new Date(event.startsAt);
+
+  if (eventStart >= from) {
+    return event;
+  }
+
+  if (event.repeatInterval === "NONE") {
+    return null;
+  }
+
+  const firstDate = atStartOfDay(from);
+
+  // 62 дней покрывают максимальный промежуток между ежемесячными
+  // повторениями событий, созданных 29–31 числа.
+  for (let offset = 0; offset <= 62; offset += 1) {
+    const date = addDays(firstDate, offset);
+
+    if (!repeatsOnDate(event, date)) {
+      continue;
+    }
+
+    const occurrence = createOccurrence(event, date);
+
+    if (new Date(occurrence.startsAt) >= from) {
+      return occurrence;
+    }
+  }
+
+  return null;
+};
+
+export const getNextEventOccurrence = (events: Event[], from: Date) => {
+  return events
+    .map((event) => getNextOccurrence(event, from))
+    .filter((event): event is Event => event !== null)
+    .sort(
+      (first, second) =>
+        new Date(first.startsAt).getTime() -
+        new Date(second.startsAt).getTime(),
+    )[0];
+};
+
 export const getEventsForWeek = (events: Event[], weekStart: Date) => {
   const weekDays = Array.from({ length: 7 }, (_, index) =>
     addDays(weekStart, index),
