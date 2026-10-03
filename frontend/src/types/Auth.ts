@@ -1,8 +1,7 @@
 export type AuthProvider = "STANDARD" | "ASVK";
 
 export type UserRole =
-  | "BACHELOR_STUDENT"
-  | "MASTER_STUDENT"
+  | "STUDENT"
   | "POSTGRADUATE"
   | "EMPLOYEE";
 

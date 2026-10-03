@@ -139,7 +139,7 @@ export const AppLayout = () => {
       return "Пользователь";
     }
 
-    if (user.role === "BACHELOR_STUDENT" || user.role === "MASTER_STUDENT") {
+    if (user.role === "STUDENT") {
       return user.groupNumber
         ? `Студент · Группа ${user.groupNumber}`
         : "Студент";

@@ -30,12 +30,9 @@ import { AuthApiError, register } from "../api/auth";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
 
 type UserRole =
-  | "BACHELOR_STUDENT"
-  | "MASTER_STUDENT"
+  | "STUDENT"
   | "POSTGRADUATE"
   | "EMPLOYEE";
-
-const studentRoles: UserRole[] = ["BACHELOR_STUDENT", "MASTER_STUDENT"];
 
 const groups = ["321", "421", "521", "621"];
 
@@ -64,7 +61,7 @@ export const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
 
-  const [role, setRole] = useState<UserRole>("BACHELOR_STUDENT");
+  const [role, setRole] = useState<UserRole>("STUDENT");
 
   const [group, setGroup] = useState("");
 
@@ -75,7 +72,7 @@ export const RegisterPage = () => {
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const errorToastTimerRef = useRef<number | null>(null);
 
-  const isStudent = studentRoles.includes(role);
+  const isStudent = role === "STUDENT";
 
   const isPasswordValid = password.length >= 8;
 
@@ -143,7 +140,7 @@ export const RegisterPage = () => {
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    if (!studentRoles.includes(newRole)) {
+    if (newRole !== "STUDENT") {
       setGroup("");
     }
   };
@@ -322,9 +319,7 @@ export const RegisterPage = () => {
                     handleRoleChange(event.target.value as UserRole)
                   }
                 >
-                  <MenuItem value="BACHELOR_STUDENT">Бакалавр</MenuItem>
-
-                  <MenuItem value="MASTER_STUDENT">Магистр</MenuItem>
+                  <MenuItem value="STUDENT">Студент</MenuItem>
 
                   <MenuItem value="POSTGRADUATE">Аспирант</MenuItem>
 

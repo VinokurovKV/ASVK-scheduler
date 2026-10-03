@@ -38,15 +38,13 @@ const LIGHT_NAVY = "#E7ECF7";
 type UserRole = NonNullable<AuthUser["role"]>;
 
 const roleLabels: Record<UserRole, string> = {
-  BACHELOR_STUDENT: "Бакалавр",
-  MASTER_STUDENT: "Магистр",
+  STUDENT: "Студент",
   POSTGRADUATE: "Аспирант",
   EMPLOYEE: "Сотрудник",
 };
 
 const roleOptions: UserRole[] = [
-  "BACHELOR_STUDENT",
-  "MASTER_STUDENT",
+  "STUDENT",
   "POSTGRADUATE",
   "EMPLOYEE",
 ];
@@ -247,7 +245,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
   const roleLabel = role !== null ? roleLabels[role] : "Пользователь";
 
-  const isStudent = role === "BACHELOR_STUDENT" || role === "MASTER_STUDENT";
+  const isStudent = role === "STUDENT";
 
   const isFormValid =
     firstName.trim().length > 0 &&
@@ -845,9 +843,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
                 setRole(newRole);
 
-                const newRoleIsStudent =
-                  newRole === "BACHELOR_STUDENT" ||
-                  newRole === "MASTER_STUDENT";
+                const newRoleIsStudent = newRole === "STUDENT";
 
                 if (!newRoleIsStudent) {
                   setGroupNumber("");
@@ -1325,9 +1321,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
                     setRole(newRole);
 
-                    const newRoleIsStudent =
-                      newRole === "BACHELOR_STUDENT" ||
-                      newRole === "MASTER_STUDENT";
+                    const newRoleIsStudent = newRole === "STUDENT";
 
                     if (!newRoleIsStudent) {
                       setGroupNumber("");
