@@ -4,8 +4,7 @@ import type {
   RegisterInput,
   UpdateProfileInput,
 } from "../types/Auth";
-
-const API_URL = "http://localhost:3000";
+import { apiFetch } from "./config";
 
 export interface AuthFieldError {
   field: string;
@@ -85,10 +84,8 @@ const getApiError = async (response: Response): Promise<AuthApiError> => {
 };
 
 export const register = async (input: RegisterInput): Promise<AuthUser> => {
-  const response = await fetch(`${API_URL}/auth/register`, {
+  const response = await apiFetch("/auth/register", {
     method: "POST",
-
-    credentials: "include",
 
     headers: {
       "Content-Type": "application/json",
@@ -105,10 +102,8 @@ export const register = async (input: RegisterInput): Promise<AuthUser> => {
 };
 
 export const login = async (input: LoginInput): Promise<AuthUser> => {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await apiFetch("/auth/login", {
     method: "POST",
-
-    credentials: "include",
 
     headers: {
       "Content-Type": "application/json",
@@ -125,9 +120,7 @@ export const login = async (input: LoginInput): Promise<AuthUser> => {
 };
 
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
-  const response = await fetch(`${API_URL}/auth/me`, {
-    credentials: "include",
-  });
+  const response = await apiFetch("/auth/me");
 
   if (response.status === 401) {
     return null;
@@ -141,9 +134,8 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 };
 
 export const logout = async () => {
-  const response = await fetch(`${API_URL}/auth/logout`, {
+  const response = await apiFetch("/auth/logout", {
     method: "POST",
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -154,10 +146,8 @@ export const logout = async () => {
 export const updateCurrentUser = async (
   input: UpdateProfileInput,
 ): Promise<AuthUser> => {
-  const response = await fetch(`${API_URL}/auth/me`, {
+  const response = await apiFetch("/auth/me", {
     method: "PATCH",
-
-    credentials: "include",
 
     headers: {
       "Content-Type": "application/json",

@@ -12,7 +12,8 @@ export interface Calendar {
 export interface EventCreator {
   id: number;
   name: string;
-  email: string;
+  username: string | null;
+  authProvider: "STANDARD" | "ASVK";
 }
 
 export interface Event {
@@ -51,8 +52,6 @@ export interface CreateEventInput {
   room?: string;
   meetingUrl?: string;
 
-  calendarId: number;
-  creatorId: number;
 }
 
 export interface UpdateEventInput {

@@ -30,8 +30,6 @@ export const CreateEventDialog = ({
       createEvent({
         ...values,
         description: values.description || undefined,
-        calendarId: 1,
-        creatorId: 1,
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({

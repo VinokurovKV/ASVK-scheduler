@@ -20,18 +20,32 @@ import {
   Typography,
 } from "@mui/material";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { login } from "../api/auth";
+import { AuthApiError, login } from "../api/auth";
 
 import asvkLogo from "../assets/logo-asvk-color.svg";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
 
 type LoginMode = "ASVK" | "STANDARD";
+
+const getLoginErrorMessage = (error: Error) => {
+  if (error instanceof AuthApiError) {
+    if (error.status === 401) {
+      return "Неверный логин или пароль";
+    }
+
+    if (error.status === 429) {
+      return "Слишком много попыток. Попробуйте снова через минуту";
+    }
+  }
+
+  return "Не удалось войти. Попробуйте ещё раз";
+};
 
 export const LoginPage = () => {
   const [loginMode, setLoginMode] = useState<LoginMode>("ASVK");
@@ -40,9 +54,41 @@ export const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
+  const errorToastTimerRef = useRef<number | null>(null);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const hideErrorToast = () => {
+    if (errorToastTimerRef.current !== null) {
+      window.clearTimeout(errorToastTimerRef.current);
+      errorToastTimerRef.current = null;
+    }
+
+    setErrorToast(null);
+  };
+
+  const showErrorToast = (message: string) => {
+    if (errorToastTimerRef.current !== null) {
+      window.clearTimeout(errorToastTimerRef.current);
+    }
+
+    setErrorToast(message);
+
+    errorToastTimerRef.current = window.setTimeout(() => {
+      setErrorToast(null);
+      errorToastTimerRef.current = null;
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (errorToastTimerRef.current !== null) {
+        window.clearTimeout(errorToastTimerRef.current);
+      }
+    };
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -53,6 +99,10 @@ export const LoginPage = () => {
       navigate("/", {
         replace: true,
       });
+    },
+
+    onError: (error) => {
+      showErrorToast(getLoginErrorMessage(error));
     },
   });
 
@@ -347,10 +397,6 @@ export const LoginPage = () => {
                   />
                 </Box>
 
-                {loginMode === "STANDARD" && loginMutation.isError && (
-                  <Alert severity="error">{loginMutation.error.message}</Alert>
-                )}
-
                 <Button
                   type="submit"
                   variant="contained"
@@ -399,6 +445,34 @@ export const LoginPage = () => {
           )}
         </Stack>
       </Paper>
+
+      {errorToast && (
+        <Box
+          sx={{
+            position: "fixed",
+            left: "50%",
+            bottom: 16,
+            zIndex: 2000,
+            width: "calc(100% - 32px)",
+            maxWidth: 440,
+            transform: "translateX(-50%)",
+            pointerEvents: "none",
+          }}
+        >
+          <Alert
+            severity="error"
+            variant="filled"
+            onClose={hideErrorToast}
+            sx={{
+              width: "100%",
+              boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+              pointerEvents: "auto",
+            }}
+          >
+            {errorToast}
+          </Alert>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -3,11 +3,10 @@ import type {
   Event,
   UpdateEventInput,
 } from "../types/Event";
-
-const API_URL = "http://localhost:3000";
+import { apiFetch } from "./config";
 
 export const getEvents = async (): Promise<Event[]> => {
-  const response = await fetch(`${API_URL}/events`);
+  const response = await apiFetch("/events");
 
   if (!response.ok) {
     throw new Error("Failed to load events");
@@ -17,7 +16,7 @@ export const getEvents = async (): Promise<Event[]> => {
 };
 
 export const createEvent = async (input: CreateEventInput): Promise<Event> => {
-  const response = await fetch(`${API_URL}/events`, {
+  const response = await apiFetch("/events", {
     method: "POST",
 
     headers: {
@@ -35,7 +34,7 @@ export const createEvent = async (input: CreateEventInput): Promise<Event> => {
 };
 
 export const deleteEvent = async (id: number): Promise<void> => {
-  const response = await fetch(`${API_URL}/events/${id}`, {
+  const response = await apiFetch(`/events/${id}`, {
     method: "DELETE",
   });
 
@@ -48,7 +47,7 @@ export const updateEvent = async (
   id: number,
   input: UpdateEventInput,
 ): Promise<Event> => {
-  const response = await fetch(`${API_URL}/events/${id}`, {
+  const response = await apiFetch(`/events/${id}`, {
     method: "PATCH",
 
     headers: {
