@@ -16,6 +16,7 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Paper,
   Stack,
   TextField,
   Typography,
@@ -37,8 +38,8 @@ const LIGHT_NAVY = "#E7ECF7";
 type UserRole = NonNullable<AuthUser["role"]>;
 
 const roleLabels: Record<UserRole, string> = {
-  BACHELOR_STUDENT: "Студент-бакалавр",
-  MASTER_STUDENT: "Студент-магистр",
+  BACHELOR_STUDENT: "Бакалавр",
+  MASTER_STUDENT: "Магистр",
   POSTGRADUATE: "Аспирант",
   EMPLOYEE: "Сотрудник",
 };
@@ -255,6 +256,16 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
     email.trim().length > 0 &&
     role !== null &&
     (!isStudent || groupNumber.length > 0);
+
+  const hasProfileChanges =
+    firstName.trim() !== (user.firstName ?? "").trim() ||
+    lastName.trim() !== (user.lastName ?? "").trim() ||
+    username.trim() !== (user.username ?? "").trim() ||
+    email.trim() !== user.email.trim() ||
+    role !== user.role ||
+    (isStudent
+      ? groupNumber !== (user.groupNumber ?? "")
+      : user.groupNumber !== null && user.groupNumber !== undefined);
 
   const normalizeRejectedValue = (field: ProfileField, value: string) => {
     const trimmedValue = value.trim();
@@ -480,6 +491,17 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
       return;
     }
 
+    if (!hasProfileChanges) {
+      setAvatarMenuAnchor(null);
+
+      setRejectedValues({});
+      clearErrorToasts();
+
+      setIsEditing(false);
+
+      return;
+    }
+
     updateProfileMutation.mutate({
       firstName: firstName.trim(),
 
@@ -500,395 +522,883 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
       sx={{
         minHeight: {
           xs: "calc(100dvh - 56px)",
-          md: "100dvh",
+          md: "auto",
         },
 
         bgcolor: "#F7F8FA",
       }}
     >
-      {/* Закреплённый профиль */}
+      {/* Мобильная версия профиля */}
       <Box
         sx={{
-          position: "sticky",
-
-          top: {
-            xs: 56,
-            md: 0,
+          display: {
+            xs: "block",
+            md: "none",
           },
-          zIndex: 1000,
-
-          bgcolor: "#F7F8FA",
-
-          px: 2,
-          pt: 2,
-          pb: 2,
-
-          borderBottom: "1px solid",
-          borderColor: "divider",
         }}
       >
+        {/* Закреплённый профиль */}
+        <Box
+          sx={{
+            position: "sticky",
+
+            top: 56,
+
+            zIndex: 1000,
+
+            bgcolor: "#F7F8FA",
+
+            px: 2,
+            pt: 2,
+            pb: 2,
+
+            borderBottom: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Stack
+            spacing={1.5}
+            sx={{
+              width: "100%",
+              maxWidth: 520,
+
+              mx: "auto",
+
+              alignItems: "center",
+            }}
+          >
+            {/* Аватар */}
+            <Box
+              sx={{
+                position: "relative",
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 88,
+                  height: 88,
+
+                  bgcolor: NAVY,
+                  color: "white",
+
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                }}
+              >
+                {initials}
+              </Avatar>
+
+              {isEditing && (
+                <IconButton
+                  size="small"
+                  aria-label="Изменить аватар"
+                  onClick={handleAvatarMenuOpen}
+                  sx={{
+                    position: "absolute",
+
+                    right: -4,
+                    bottom: -4,
+
+                    width: 30,
+                    height: 30,
+
+                    bgcolor: LIGHT_NAVY,
+                    color: NAVY,
+
+                    border: "2px solid",
+                    borderColor: "background.paper",
+
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.12)",
+
+                    "&:hover": {
+                      bgcolor: "#D9E1F0",
+                    },
+                  }}
+                >
+                  <EditOutlined
+                    sx={{
+                      fontSize: 16,
+                    }}
+                  />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* ФИО + кнопки */}
+            <Box
+              sx={{
+                position: "relative",
+
+                width: "100%",
+                minHeight: 36,
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{
+                  width: "fit-content",
+                  maxWidth: "calc(100% - 88px)",
+
+                  mx: "auto",
+
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+
+                  textAlign: "center",
+
+                  whiteSpace: "normal",
+                  wordBreak: "normal",
+                  overflowWrap: "normal",
+                }}
+              >
+                {firstName} {lastName}
+              </Typography>
+
+              {/* Карандаш / галка */}
+              <IconButton
+                size="small"
+                aria-label={
+                  isEditing ? "Сохранить изменения" : "Редактировать профиль"
+                }
+                onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                disabled={
+                  isEditing && (!isFormValid || updateProfileMutation.isPending)
+                }
+                sx={{
+                  position: "absolute",
+
+                  top: -3,
+                  right: 0,
+
+                  width: 34,
+                  height: 34,
+
+                  color: isEditing ? "#256029" : NAVY,
+
+                  bgcolor: isEditing ? "#E6F4E8" : LIGHT_NAVY,
+
+                  border: "1px solid",
+
+                  borderColor: isEditing ? "#B9D9BE" : "#CBD5E5",
+
+                  boxShadow: "0 1px 3px rgba(22, 33, 62, 0.08)",
+
+                  "&:hover": {
+                    bgcolor: isEditing ? "#D5ECD8" : "#D9E1F0",
+                  },
+
+                  "&.Mui-disabled": {
+                    bgcolor: "#EEF0F2",
+                  },
+                }}
+              >
+                {isEditing ? (
+                  updateProfileMutation.isPending ? (
+                    <CircularProgress size={17} />
+                  ) : (
+                    <CheckRounded
+                      sx={{
+                        fontSize: 19,
+                      }}
+                    />
+                  )
+                ) : (
+                  <EditOutlined
+                    sx={{
+                      fontSize: 18,
+                    }}
+                  />
+                )}
+              </IconButton>
+
+              {/* Крестик под галкой */}
+              {isEditing && (
+                <IconButton
+                  size="small"
+                  aria-label="Отменить изменения"
+                  onClick={handleCancelEditing}
+                  disabled={updateProfileMutation.isPending}
+                  sx={{
+                    position: "absolute",
+
+                    top: 37,
+                    right: 0,
+
+                    width: 34,
+                    height: 34,
+
+                    color: "error.main",
+                    bgcolor: "#FDECEC",
+
+                    border: "1px solid",
+                    borderColor: "#F2C8C8",
+
+                    boxShadow: "0 1px 3px rgba(22, 33, 62, 0.06)",
+
+                    "&:hover": {
+                      bgcolor: "#FAD7D7",
+                    },
+                  }}
+                >
+                  <CloseRounded
+                    sx={{
+                      fontSize: 19,
+                    }}
+                  />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* Роль и группа */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                textAlign: "center",
+              }}
+            >
+              {roleLabel}
+
+              {isStudent && groupNumber ? ` · ${groupNumber}` : ""}
+            </Typography>
+          </Stack>
+        </Box>
+
+        {/* Поля */}
         <Stack
-          spacing={1.5}
+          spacing={2}
           sx={{
             width: "100%",
             maxWidth: 520,
 
             mx: "auto",
 
-            alignItems: "center",
+            px: 2,
+            py: 2,
           }}
         >
-          {/* Аватар */}
-          <Box
+          <TextField
+            label="Имя"
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+            error={hasRejectedValue("firstName", firstName)}
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: !isEditing,
+              },
+            }}
+            sx={getFieldStyles(isEditing)}
+          />
+
+          <TextField
+            label="Фамилия"
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+            error={hasRejectedValue("lastName", lastName)}
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: !isEditing,
+              },
+            }}
+            sx={getFieldStyles(isEditing)}
+          />
+
+          <TextField
+            label="Логин"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            error={hasRejectedValue("username", username)}
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: !isEditing,
+              },
+            }}
+            sx={getFieldStyles(isEditing)}
+          />
+
+          <TextField
+            label="Почта"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            error={hasRejectedValue("email", email)}
+            fullWidth
+            slotProps={{
+              input: {
+                readOnly: !isEditing,
+              },
+            }}
+            sx={getFieldStyles(isEditing)}
+          />
+
+          {/* Роль */}
+          {isEditing ? (
+            <TextField
+              select
+              label="Роль"
+              value={role ?? ""}
+              error={hasRejectedValue("role", role ?? "")}
+              onChange={(event) => {
+                const newRole = event.target.value as UserRole;
+
+                setRole(newRole);
+
+                const newRoleIsStudent =
+                  newRole === "BACHELOR_STUDENT" ||
+                  newRole === "MASTER_STUDENT";
+
+                if (!newRoleIsStudent) {
+                  setGroupNumber("");
+                }
+              }}
+              fullWidth
+              sx={getFieldStyles(true)}
+            >
+              {roleOptions.map((roleOption) => (
+                <MenuItem key={roleOption} value={roleOption}>
+                  {roleLabels[roleOption]}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <TextField
+              label="Роль"
+              value={roleLabel}
+              fullWidth
+              slotProps={{
+                input: {
+                  readOnly: true,
+                },
+              }}
+              sx={getFieldStyles(false)}
+            />
+          )}
+
+          {/* Группа */}
+          {isStudent && (
+            <>
+              {isEditing ? (
+                <TextField
+                  select
+                  label="Группа"
+                  value={groupNumber}
+                  error={hasRejectedValue("groupNumber", groupNumber)}
+                  onChange={(event) => setGroupNumber(event.target.value)}
+                  fullWidth
+                  sx={getFieldStyles(true)}
+                >
+                  {groups.map((group) => (
+                    <MenuItem key={group} value={group}>
+                      {group}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : (
+                <TextField
+                  label="Группа"
+                  value={groupNumber}
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                    },
+                  }}
+                  sx={getFieldStyles(false)}
+                />
+              )}
+            </>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Десктопная версия профиля */}
+      <Box
+        sx={{
+          display: {
+            xs: "none",
+            md: "block",
+          },
+
+          width: "100%",
+          maxWidth: 1120,
+
+          mx: "auto",
+        }}
+      >
+        {/* Заголовок страницы */}
+        <Box
+          sx={{
+            mb: 3,
+          }}
+        >
+          <Typography
+            variant="h4"
             sx={{
-              position: "relative",
+              color: NAVY,
+
+              fontWeight: 700,
+              lineHeight: 1.2,
             }}
           >
-            <Avatar
+            Профиль
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 0.75,
+            }}
+          >
+            Личные данные и информация об аккаунте
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: "grid",
+
+            gridTemplateColumns: "300px minmax(0, 1fr)",
+
+            gap: 3,
+
+            alignItems: "stretch",
+          }}
+        >
+          {/* Карточка пользователя */}
+          <Paper
+            elevation={0}
+            sx={{
+              px: 3,
+              py: 4,
+
+              border: "1px solid",
+              borderColor: "divider",
+
+              borderRadius: 3,
+
+              bgcolor: "background.paper",
+
+              textAlign: "center",
+            }}
+          >
+            {/* Аватар */}
+            <Box
               sx={{
-                width: 88,
-                height: 88,
+                position: "relative",
 
-                bgcolor: NAVY,
-                color: "white",
+                width: "fit-content",
 
-                fontSize: "1.75rem",
-                fontWeight: 700,
+                mx: "auto",
               }}
             >
-              {initials}
-            </Avatar>
-
-            {isEditing && (
-              <IconButton
-                size="small"
-                aria-label="Изменить аватар"
-                onClick={handleAvatarMenuOpen}
+              <Avatar
                 sx={{
-                  position: "absolute",
+                  width: 112,
+                  height: 112,
 
-                  right: -4,
-                  bottom: -4,
+                  bgcolor: NAVY,
+                  color: "white",
 
-                  width: 30,
-                  height: 30,
-
-                  bgcolor: LIGHT_NAVY,
-                  color: NAVY,
-
-                  border: "2px solid",
-                  borderColor: "background.paper",
-
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.12)",
-
-                  "&:hover": {
-                    bgcolor: "#D9E1F0",
-                  },
+                  fontSize: "2rem",
+                  fontWeight: 700,
                 }}
               >
-                <EditOutlined
+                {initials}
+              </Avatar>
+
+              {isEditing && (
+                <IconButton
+                  size="small"
+                  aria-label="Изменить аватар"
+                  onClick={handleAvatarMenuOpen}
                   sx={{
-                    fontSize: 16,
+                    position: "absolute",
+
+                    right: -4,
+                    bottom: -4,
+
+                    width: 34,
+                    height: 34,
+
+                    bgcolor: LIGHT_NAVY,
+                    color: NAVY,
+
+                    border: "2px solid",
+                    borderColor: "background.paper",
+
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.14)",
+
+                    "&:hover": {
+                      bgcolor: "#D9E1F0",
+                    },
                   }}
-                />
-              </IconButton>
-            )}
-          </Box>
+                >
+                  <EditOutlined
+                    sx={{
+                      fontSize: 18,
+                    }}
+                  />
+                </IconButton>
+              )}
+            </Box>
 
-          {/* ФИО + кнопки */}
-          <Box
-            sx={{
-              position: "relative",
-
-              width: "100%",
-              minHeight: 36,
-            }}
-          >
+            {/* ФИО */}
             <Typography
               variant="h5"
               sx={{
-                width: "fit-content",
-                maxWidth: "calc(100% - 88px)",
+                mt: 2.5,
 
-                mx: "auto",
+                color: NAVY,
 
                 fontWeight: 700,
-                lineHeight: 1.2,
+                lineHeight: 1.25,
 
-                textAlign: "center",
-
-                whiteSpace: "normal",
-                wordBreak: "normal",
-                overflowWrap: "normal",
+                overflowWrap: "anywhere",
               }}
             >
               {firstName} {lastName}
             </Typography>
 
-            {/* Карандаш / галка */}
-            <IconButton
-              size="small"
-              aria-label={
-                isEditing ? "Сохранить изменения" : "Редактировать профиль"
-              }
-              onClick={isEditing ? handleSave : () => setIsEditing(true)}
-              disabled={
-                isEditing && (!isFormValid || updateProfileMutation.isPending)
-              }
+            {/* Роль */}
+            <Typography
+              variant="body1"
+              color="text.secondary"
               sx={{
-                position: "absolute",
-
-                top: -3,
-                right: 0,
-
-                width: 34,
-                height: 34,
-
-                color: isEditing ? "#256029" : NAVY,
-
-                bgcolor: isEditing ? "#E6F4E8" : LIGHT_NAVY,
-
-                border: "1px solid",
-
-                borderColor: isEditing ? "#B9D9BE" : "#CBD5E5",
-
-                boxShadow: "0 1px 3px rgba(22, 33, 62, 0.08)",
-
-                "&:hover": {
-                  bgcolor: isEditing ? "#D5ECD8" : "#D9E1F0",
-                },
-
-                "&.Mui-disabled": {
-                  bgcolor: "#EEF0F2",
-                },
+                mt: 1,
               }}
             >
-              {isEditing ? (
-                updateProfileMutation.isPending ? (
-                  <CircularProgress size={17} />
-                ) : (
-                  <CheckRounded
-                    sx={{
-                      fontSize: 19,
-                    }}
-                  />
-                )
-              ) : (
-                <EditOutlined
-                  sx={{
-                    fontSize: 18,
-                  }}
-                />
-              )}
-            </IconButton>
+              {roleLabel}
+            </Typography>
 
-            {/* Крестик под галкой */}
-            {isEditing && (
-              <IconButton
-                size="small"
-                aria-label="Отменить изменения"
-                onClick={handleCancelEditing}
-                disabled={updateProfileMutation.isPending}
+            {/* Группа */}
+            {isStudent && groupNumber && (
+              <Box
                 sx={{
-                  position: "absolute",
+                  width: "fit-content",
 
-                  top: 37,
-                  right: 0,
+                  mx: "auto",
+                  mt: 1.5,
 
-                  width: 34,
-                  height: 34,
+                  px: 1.5,
+                  py: 0.6,
 
-                  color: "error.main",
-                  bgcolor: "#FDECEC",
+                  bgcolor: LIGHT_NAVY,
+                  color: NAVY,
 
-                  border: "1px solid",
-                  borderColor: "#F2C8C8",
+                  borderRadius: 10,
 
-                  boxShadow: "0 1px 3px rgba(22, 33, 62, 0.06)",
-
-                  "&:hover": {
-                    bgcolor: "#FAD7D7",
-                  },
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
                 }}
               >
-                <CloseRounded
-                  sx={{
-                    fontSize: 19,
-                  }}
-                />
-              </IconButton>
+                Группа {groupNumber}
+              </Box>
             )}
-          </Box>
+          </Paper>
 
-          {/* Роль и группа */}
-          <Typography
-            variant="body2"
-            color="text.secondary"
+          {/* Карточка личных данных */}
+          <Paper
+            elevation={0}
             sx={{
-              textAlign: "center",
+              border: "1px solid",
+              borderColor: "divider",
+
+              borderRadius: 3,
+
+              bgcolor: "background.paper",
+
+              overflow: "hidden",
             }}
           >
-            {roleLabel}
+            {/* Заголовок карточки */}
+            <Box
+              sx={{
+                display: "flex",
 
-            {isStudent && groupNumber ? ` · ${groupNumber}` : ""}
-          </Typography>
-        </Stack>
-      </Box>
+                minHeight: 76,
 
-      {/* Поля */}
-      <Stack
-        spacing={2}
-        sx={{
-          width: "100%",
-          maxWidth: 520,
+                alignItems: "center",
+                justifyContent: "space-between",
 
-          mx: "auto",
+                gap: 2,
 
-          px: 2,
-          py: 2,
-        }}
-      >
-        <TextField
-          label="Имя"
-          value={firstName}
-          onChange={(event) => setFirstName(event.target.value)}
-          error={hasRejectedValue("firstName", firstName)}
-          fullWidth
-          slotProps={{
-            input: {
-              readOnly: !isEditing,
-            },
-          }}
-          sx={getFieldStyles(isEditing)}
-        />
+                px: 3,
 
-        <TextField
-          label="Фамилия"
-          value={lastName}
-          onChange={(event) => setLastName(event.target.value)}
-          error={hasRejectedValue("lastName", lastName)}
-          fullWidth
-          slotProps={{
-            input: {
-              readOnly: !isEditing,
-            },
-          }}
-          sx={getFieldStyles(isEditing)}
-        />
+                borderBottom: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: NAVY,
 
-        <TextField
-          label="Логин"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          error={hasRejectedValue("username", username)}
-          fullWidth
-          slotProps={{
-            input: {
-              readOnly: !isEditing,
-            },
-          }}
-          sx={getFieldStyles(isEditing)}
-        />
+                    fontWeight: 700,
+                  }}
+                >
+                  Личные данные
+                </Typography>
 
-        <TextField
-          label="Почта"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          error={hasRejectedValue("email", email)}
-          fullWidth
-          slotProps={{
-            input: {
-              readOnly: !isEditing,
-            },
-          }}
-          sx={getFieldStyles(isEditing)}
-        />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mt: 0.25,
+                  }}
+                >
+                  Основная информация профиля
+                </Typography>
+              </Box>
 
-        {/* Роль */}
-        {isEditing ? (
-          <TextField
-            select
-            label="Роль"
-            value={role ?? ""}
-            error={hasRejectedValue("role", role ?? "")}
-            onChange={(event) => {
-              const newRole = event.target.value as UserRole;
-
-              setRole(newRole);
-
-              const newRoleIsStudent =
-                newRole === "BACHELOR_STUDENT" || newRole === "MASTER_STUDENT";
-
-              if (!newRoleIsStudent) {
-                setGroupNumber("");
-              }
-            }}
-            fullWidth
-            sx={getFieldStyles(true)}
-          >
-            <MenuItem value="" disabled>
-              Выберите роль
-            </MenuItem>
-
-            {roleOptions.map((roleOption) => (
-              <MenuItem key={roleOption} value={roleOption}>
-                {roleLabels[roleOption]}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          <TextField
-            label="Роль"
-            value={roleLabel}
-            fullWidth
-            slotProps={{
-              input: {
-                readOnly: true,
-              },
-            }}
-            sx={getFieldStyles(false)}
-          />
-        )}
-
-        {/* Группа */}
-        {isStudent && (
-          <>
-            {isEditing ? (
-              <TextField
-                select
-                label="Группа"
-                value={groupNumber}
-                error={hasRejectedValue("groupNumber", groupNumber)}
-                onChange={(event) => setGroupNumber(event.target.value)}
-                fullWidth
-                sx={getFieldStyles(true)}
+              {/* Кнопки редактирования */}
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                }}
               >
-                <MenuItem value="" disabled>
-                  Выберите группу
-                </MenuItem>
+                {isEditing && (
+                  <IconButton
+                    aria-label="Отменить изменения"
+                    onClick={handleCancelEditing}
+                    disabled={updateProfileMutation.isPending}
+                    sx={{
+                      width: 38,
+                      height: 38,
 
-                {groups.map((group) => (
-                  <MenuItem key={group} value={group}>
-                    {group}
-                  </MenuItem>
-                ))}
-              </TextField>
-            ) : (
+                      color: "error.main",
+                      bgcolor: "#FDECEC",
+
+                      border: "1px solid",
+                      borderColor: "#F2C8C8",
+
+                      boxShadow: "0 1px 3px rgba(22, 33, 62, 0.06)",
+
+                      "&:hover": {
+                        bgcolor: "#FAD7D7",
+                      },
+                    }}
+                  >
+                    <CloseRounded
+                      sx={{
+                        fontSize: 21,
+                      }}
+                    />
+                  </IconButton>
+                )}
+
+                <IconButton
+                  aria-label={
+                    isEditing ? "Сохранить изменения" : "Редактировать профиль"
+                  }
+                  onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                  disabled={
+                    isEditing &&
+                    (!isFormValid || updateProfileMutation.isPending)
+                  }
+                  sx={{
+                    width: 38,
+                    height: 38,
+
+                    color: isEditing ? "#256029" : NAVY,
+
+                    bgcolor: isEditing ? "#E6F4E8" : LIGHT_NAVY,
+
+                    border: "1px solid",
+
+                    borderColor: isEditing ? "#B9D9BE" : "#CBD5E5",
+
+                    boxShadow: "0 1px 3px rgba(22, 33, 62, 0.08)",
+
+                    "&:hover": {
+                      bgcolor: isEditing ? "#D5ECD8" : "#D9E1F0",
+                    },
+
+                    "&.Mui-disabled": {
+                      bgcolor: "#EEF0F2",
+                    },
+                  }}
+                >
+                  {isEditing ? (
+                    updateProfileMutation.isPending ? (
+                      <CircularProgress size={18} />
+                    ) : (
+                      <CheckRounded
+                        sx={{
+                          fontSize: 21,
+                        }}
+                      />
+                    )
+                  ) : (
+                    <EditOutlined
+                      sx={{
+                        fontSize: 20,
+                      }}
+                    />
+                  )}
+                </IconButton>
+              </Stack>
+            </Box>
+
+            {/* Поля профиля */}
+            <Box
+              sx={{
+                display: "grid",
+
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+
+                gap: 2.5,
+
+                p: 3,
+              }}
+            >
               <TextField
-                label="Группа"
-                value={groupNumber}
+                label="Имя"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                error={hasRejectedValue("firstName", firstName)}
                 fullWidth
                 slotProps={{
                   input: {
-                    readOnly: true,
+                    readOnly: !isEditing,
                   },
                 }}
-                sx={getFieldStyles(false)}
+                sx={getFieldStyles(isEditing)}
               />
-            )}
-          </>
-        )}
-      </Stack>
+
+              <TextField
+                label="Фамилия"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                error={hasRejectedValue("lastName", lastName)}
+                fullWidth
+                slotProps={{
+                  input: {
+                    readOnly: !isEditing,
+                  },
+                }}
+                sx={getFieldStyles(isEditing)}
+              />
+
+              <TextField
+                label="Логин"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                error={hasRejectedValue("username", username)}
+                fullWidth
+                slotProps={{
+                  input: {
+                    readOnly: !isEditing,
+                  },
+                }}
+                sx={getFieldStyles(isEditing)}
+              />
+
+              <TextField
+                label="Почта"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                error={hasRejectedValue("email", email)}
+                fullWidth
+                slotProps={{
+                  input: {
+                    readOnly: !isEditing,
+                  },
+                }}
+                sx={getFieldStyles(isEditing)}
+              />
+
+              {/* Роль */}
+              {isEditing ? (
+                <TextField
+                  select
+                  label="Роль"
+                  value={role ?? ""}
+                  error={hasRejectedValue("role", role ?? "")}
+                  onChange={(event) => {
+                    const newRole = event.target.value as UserRole;
+
+                    setRole(newRole);
+
+                    const newRoleIsStudent =
+                      newRole === "BACHELOR_STUDENT" ||
+                      newRole === "MASTER_STUDENT";
+
+                    if (!newRoleIsStudent) {
+                      setGroupNumber("");
+                    }
+                  }}
+                  fullWidth
+                  sx={getFieldStyles(true)}
+                >
+                  <MenuItem value="" disabled>
+                    Выберите роль
+                  </MenuItem>
+
+                  {roleOptions.map((roleOption) => (
+                    <MenuItem key={roleOption} value={roleOption}>
+                      {roleLabels[roleOption]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : (
+                <TextField
+                  label="Роль"
+                  value={roleLabel}
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                    },
+                  }}
+                  sx={getFieldStyles(false)}
+                />
+              )}
+
+              {/* Группа */}
+              {isStudent &&
+                (isEditing ? (
+                  <TextField
+                    select
+                    label="Группа"
+                    value={groupNumber}
+                    error={hasRejectedValue("groupNumber", groupNumber)}
+                    onChange={(event) => setGroupNumber(event.target.value)}
+                    fullWidth
+                    sx={getFieldStyles(true)}
+                  >
+                    <MenuItem value="" disabled>
+                      Выберите группу
+                    </MenuItem>
+
+                    {groups.map((group) => (
+                      <MenuItem key={group} value={group}>
+                        {group}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ) : (
+                  <TextField
+                    label="Группа"
+                    value={groupNumber}
+                    fullWidth
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                      },
+                    }}
+                    sx={getFieldStyles(false)}
+                  />
+                ))}
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
 
       {/* Меню аватара */}
       <Menu
