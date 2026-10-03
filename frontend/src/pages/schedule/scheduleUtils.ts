@@ -93,19 +93,37 @@ export const getEventsForDate = (events: Event[], date: Date) => {
 const getNextOccurrence = (event: Event, from: Date) => {
   const eventStart = new Date(event.startsAt);
 
+  const isCurrentOrUpcoming = (occurrence: Event) => {
+    const startsAt = new Date(occurrence.startsAt);
+    const endsAt = new Date(occurrence.endsAt);
+
+    if (startsAt >= from) {
+      return true;
+    }
+
+    if (endsAt <= from) {
+      return false;
+    }
+
+    const eventDuration = endsAt.getTime() - startsAt.getTime();
+    const elapsedTime = from.getTime() - startsAt.getTime();
+
+    return elapsedTime <= eventDuration / 2;
+  };
+
   if (eventStart >= from) {
     return event;
   }
 
   if (event.repeatInterval === "NONE") {
-    return null;
+    return isCurrentOrUpcoming(event) ? event : null;
   }
 
   const firstDate = atStartOfDay(from);
 
   // 62 дней покрывают максимальный промежуток между ежемесячными
   // повторениями событий, созданных 29–31 числа.
-  for (let offset = 0; offset <= 62; offset += 1) {
+  for (let offset = -1; offset <= 62; offset += 1) {
     const date = addDays(firstDate, offset);
 
     if (!repeatsOnDate(event, date)) {
@@ -114,7 +132,7 @@ const getNextOccurrence = (event: Event, from: Date) => {
 
     const occurrence = createOccurrence(event, date);
 
-    if (new Date(occurrence.startsAt) >= from) {
+    if (isCurrentOrUpcoming(occurrence)) {
       return occurrence;
     }
   }

@@ -199,10 +199,8 @@ export const AppLayout = () => {
       sx={{
         minHeight: "100dvh",
 
-        backgroundColor: {
-          xs: "background.default",
-          md: "app.brand.navy",
-        },
+        background: (theme) =>
+          `linear-gradient(to bottom, ${theme.palette.app.brand.navy} 0, ${theme.palette.app.brand.navy} 92px, ${theme.palette.background.default} 92px, ${theme.palette.background.default} 100%)`,
       }}
     >
       {/* Мобильная верхняя панель */}
@@ -218,11 +216,11 @@ export const AppLayout = () => {
           top: 0,
           zIndex: 1200,
 
-          gridTemplateColumns: "48px 1fr 48px",
+          gridTemplateColumns: "48px minmax(0, 1fr) 40px 48px",
 
           alignItems: "center",
 
-          height: 56,
+          height: 64,
 
           px: 1,
 
@@ -271,6 +269,16 @@ export const AppLayout = () => {
         >
           {isProfilePage ? "Профиль" : "ASVK Schedule"}
         </Typography>
+
+        <IconButton
+          aria-label="Уведомления"
+          sx={{
+            justifySelf: "center",
+            color: "common.white",
+          }}
+        >
+          <NotificationsNoneOutlined />
+        </IconButton>
 
         <IconButton
           aria-label="Меню пользователя"
@@ -1016,9 +1024,11 @@ export const AppLayout = () => {
           },
 
           minHeight: {
-            xs: "auto",
+            xs: "calc(100dvh - 64px)",
             md: `calc(100dvh - ${DESKTOP_HEADER_HEIGHT}px)`,
           },
+
+          overflow: "hidden",
 
           px: {
             xs: isProfilePage ? 0 : 2,
@@ -1038,8 +1048,13 @@ export const AppLayout = () => {
           bgcolor: "background.default",
 
           borderTopLeftRadius: {
-            xs: 0,
+            xs: "20px",
             md: "20px",
+          },
+
+          borderTopRightRadius: {
+            xs: "20px",
+            md: 0,
           },
 
           transition: "margin-left 220ms ease",
@@ -1073,6 +1088,9 @@ export const AppLayout = () => {
               navigate(value);
             }}
             showLabels
+            sx={{
+              height: 68,
+            }}
           >
             {navigation.map((item) => (
               <BottomNavigationAction
