@@ -1,5 +1,5 @@
 export type UserRole =
-  'BACHELOR_STUDENT' | 'MASTER_STUDENT' | 'POSTGRADUATE' | 'EMPLOYEE';
+  'STUDENT' | 'POSTGRADUATE' | 'EMPLOYEE';
 
 export interface RegisterInput {
   firstName: string;

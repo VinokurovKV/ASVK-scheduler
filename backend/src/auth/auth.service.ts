@@ -108,8 +108,7 @@ export class AuthService {
     }
 
     const allowedRoles = new Set([
-      'BACHELOR_STUDENT',
-      'MASTER_STUDENT',
+      'STUDENT',
       'POSTGRADUATE',
       'EMPLOYEE',
     ]);
@@ -118,8 +117,7 @@ export class AuthService {
       throw new BadRequestException('Role has an invalid value');
     }
 
-    const isStudent =
-      input.role === 'BACHELOR_STUDENT' || input.role === 'MASTER_STUDENT';
+    const isStudent = input.role === 'STUDENT';
 
     const allowedGroups = new Set(['321', '421', '521', '621']);
 
@@ -374,8 +372,7 @@ export class AuthService {
     }
 
     const allowedRoles = new Set([
-      'BACHELOR_STUDENT',
-      'MASTER_STUDENT',
+      'STUDENT',
       'POSTGRADUATE',
       'EMPLOYEE',
     ]);
@@ -384,8 +381,7 @@ export class AuthService {
       throw new BadRequestException('Role has an invalid value');
     }
 
-    const isStudent =
-      input.role === 'BACHELOR_STUDENT' || input.role === 'MASTER_STUDENT';
+    const isStudent = input.role === 'STUDENT';
 
     const groupNumber = isStudent ? normalizeString(input.groupNumber) : null;
 

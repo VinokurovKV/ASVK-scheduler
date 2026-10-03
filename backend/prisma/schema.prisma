@@ -49,8 +49,7 @@ enum ParticipantStatus {
 }
 
 enum UserRole {
-  BACHELOR_STUDENT
-  MASTER_STUDENT
+  STUDENT
   POSTGRADUATE
   EMPLOYEE
 }
