@@ -1,4 +1,5 @@
 import type { EventType } from "../types/Event";
+import { appColors } from "../theme/colors";
 
 export const eventTypeLabels: Record<EventType, string> = {
   LECTURE: "Лекция",
@@ -12,24 +13,24 @@ interface EventTypeStyle {
   surface: string;
 }
 
-export const eventTypeTextColor = "#1F2937";
-export const eventTypeLabelTextColor = "#F8FAFC";
+export const eventTypeTextColor = appColors.text.event;
+export const eventTypeLabelTextColor = appColors.text.onDark;
 
 export const eventTypeStyles: Record<EventType, EventTypeStyle> = {
   LECTURE: {
-    main: "#3478B9",
-    surface: "#D9EAF7",
+    main: appColors.event.lecture.main,
+    surface: appColors.event.lecture.surface,
   },
   SEMINAR: {
-    main: "#3B7D43",
-    surface: "#D8ECD9",
+    main: appColors.event.seminar.main,
+    surface: appColors.event.seminar.surface,
   },
   WORK_MEETING: {
-    main: "#7255AD",
-    surface: "#E2D9F1",
+    main: appColors.event.workMeeting.main,
+    surface: appColors.event.workMeeting.surface,
   },
   MEETING: {
-    main: "#C96D22",
-    surface: "#FADDC4",
+    main: appColors.event.meeting.main,
+    surface: appColors.event.meeting.surface,
   },
 };

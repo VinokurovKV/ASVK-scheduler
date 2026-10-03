@@ -172,7 +172,7 @@ export const RegisterPage = () => {
       component="main"
       sx={{
         minHeight: "100dvh",
-        bgcolor: "#f7f8fa",
+        bgcolor: "background.default",
 
         px: {
           xs: 2,
@@ -206,10 +206,10 @@ export const RegisterPage = () => {
             sm: 4,
           },
 
-          boxShadow: {
+          boxShadow: (theme) => ({
             xs: "none",
-            sm: "0 18px 50px rgba(31, 41, 55, 0.08)",
-          },
+            sm: theme.appShadows.card,
+          }),
 
           p: {
             xs: 0,
@@ -237,7 +237,7 @@ export const RegisterPage = () => {
                 bgcolor: "primary.main",
                 color: "primary.contrastText",
 
-                boxShadow: "0 10px 28px rgba(25, 118, 210, 0.24)",
+                boxShadow: (theme) => theme.appShadows.primary,
               }}
             >
               <CalendarMonthRounded fontSize="large" />
@@ -459,7 +459,7 @@ export const RegisterPage = () => {
             onClose={hideErrorToast}
             sx={{
               width: "100%",
-              boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+              boxShadow: (theme) => theme.appShadows.toast,
               pointerEvents: "auto",
             }}
           >

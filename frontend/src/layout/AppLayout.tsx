@@ -52,13 +52,6 @@ const COLLAPSED_SIDEBAR_WIDTH = 72;
 
 const DESKTOP_HEADER_HEIGHT = 72;
 
-const NAVY = "#16213E";
-const LIGHT_NAVY = "#E7ECF7";
-
-const TEXT_WHITE = "#F7F9FC";
-const TEXT_WHITE_SECONDARY = "rgba(247, 249, 252, 0.72)";
-const TEXT_WHITE_MUTED = "rgba(247, 249, 252, 0.5)";
-
 const navigation = [
   {
     label: "Сегодня",
@@ -207,8 +200,8 @@ export const AppLayout = () => {
         minHeight: "100dvh",
 
         backgroundColor: {
-          xs: "#F7F8FA",
-          md: NAVY,
+          xs: "background.default",
+          md: "app.brand.navy",
         },
       }}
     >
@@ -233,10 +226,10 @@ export const AppLayout = () => {
 
           px: 1,
 
-          backgroundColor: NAVY,
-          color: "white",
+          backgroundColor: "app.brand.navy",
+          color: "common.white",
 
-          boxShadow: "0 1px 5px rgba(0, 0, 0, 0.16)",
+          boxShadow: (theme) => theme.appShadows.appBar,
         }}
       >
         {isProfilePage ? (
@@ -244,7 +237,7 @@ export const AppLayout = () => {
             onClick={handleProfileBack}
             aria-label="Назад"
             sx={{
-              color: "white",
+              color: "common.white",
               justifySelf: "center",
             }}
           >
@@ -254,7 +247,7 @@ export const AppLayout = () => {
           <IconButton
             aria-label="Меню"
             sx={{
-              color: "white",
+              color: "common.white",
               justifySelf: "center",
             }}
           >
@@ -292,8 +285,8 @@ export const AppLayout = () => {
               width: 34,
               height: 34,
 
-              bgcolor: LIGHT_NAVY,
-              color: NAVY,
+              bgcolor: "app.brand.navySoft",
+              color: "app.brand.navy",
 
               fontSize: "0.82rem",
               fontWeight: 700,
@@ -331,11 +324,12 @@ export const AppLayout = () => {
 
           py: 2,
 
-          color: "white",
+          color: "common.white",
 
-          bgcolor: NAVY,
+          bgcolor: "app.brand.navy",
 
-          borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRight: "1px solid",
+          borderRightColor: "app.border.sidebar",
 
           transition: "width 220ms ease, padding 220ms ease",
         }}
@@ -362,11 +356,11 @@ export const AppLayout = () => {
 
             tooltip: {
               sx: {
-                bgcolor: "rgba(97, 97, 97, 0.96)",
-                color: "#FFFFFF",
+                bgcolor: "app.overlay.tooltip",
+                color: "common.white",
                 opacity: 1,
 
-                boxShadow: "0 3px 10px rgba(0, 0, 0, 0.22)",
+                boxShadow: (theme) => theme.appShadows.floating,
               },
             },
           }}
@@ -393,18 +387,18 @@ export const AppLayout = () => {
 
               zIndex: 2,
 
-              color: TEXT_WHITE,
-              bgcolor: NAVY,
+              color: "app.text.onDark",
+              bgcolor: "app.brand.navy",
 
               border: "1px solid",
-              borderColor: "rgba(247, 249, 252, 0.22)",
+              borderColor: "app.border.onDark",
 
-              boxShadow: "0 3px 10px rgba(0, 0, 0, 0.22)",
+              boxShadow: (theme) => theme.appShadows.floating,
 
               "&:hover": {
-                bgcolor: "#202D4D",
+                bgcolor: "app.brand.navyHover",
 
-                borderColor: "rgba(247, 249, 252, 0.38)",
+                borderColor: "app.border.onDarkHover",
               },
             }}
           >
@@ -455,14 +449,14 @@ export const AppLayout = () => {
 
               borderRadius: 2,
 
-              color: "#FFFFFF",
-              bgcolor: "rgba(76, 150, 255, 0.18)",
+              color: "common.white",
+              bgcolor: "app.navigation.active",
             }}
           >
             <SchoolRounded
               sx={{
                 fontSize: 28,
-                color: "#78ADFF",
+                color: "app.navigation.icon",
               }}
             />
           </Box>
@@ -475,7 +469,7 @@ export const AppLayout = () => {
             >
               <Typography
                 sx={{
-                  color: TEXT_WHITE,
+                  color: "app.text.onDark",
 
                   fontSize: "1rem",
                   fontWeight: 800,
@@ -491,7 +485,7 @@ export const AppLayout = () => {
                 sx={{
                   mt: 0.2,
 
-                  color: TEXT_WHITE,
+                  color: "app.text.onDark",
 
                   fontSize: "1rem",
                   fontWeight: 800,
@@ -534,23 +528,23 @@ export const AppLayout = () => {
 
                   borderRadius: 2.5,
 
-                  color: TEXT_WHITE_SECONDARY,
+                  color: "app.text.onDarkSecondary",
 
                   transition: "background-color 150ms ease, color 150ms ease",
 
                   "&:hover": {
-                    bgcolor: "rgba(255, 255, 255, 0.07)",
+                    bgcolor: "app.navigation.hover",
 
-                    color: TEXT_WHITE,
+                    color: "app.text.onDark",
                   },
 
                   "&.active": {
-                    bgcolor: "rgba(76, 150, 255, 0.2)",
+                    bgcolor: "app.navigation.active",
 
-                    color: "#8BBCFF",
+                    color: "app.navigation.icon",
 
                     "&:hover": {
-                      bgcolor: "rgba(76, 150, 255, 0.27)",
+                      bgcolor: "app.navigation.active",
                     },
                   },
                 }}
@@ -614,7 +608,7 @@ export const AppLayout = () => {
 
               flexShrink: 0,
 
-              bgcolor: "rgba(255, 255, 255, 0.4)",
+              bgcolor: "app.text.onDarkMuted",
 
               maskImage: `url("${gzLogo}")`,
 
@@ -648,7 +642,7 @@ export const AppLayout = () => {
             >
               <Typography
                 sx={{
-                  color: TEXT_WHITE,
+                  color: "app.text.onDark",
 
                   fontSize: "0.78rem",
 
@@ -666,7 +660,7 @@ export const AppLayout = () => {
                 sx={{
                   mt: 0.25,
 
-                  color: TEXT_WHITE_MUTED,
+                  color: "app.text.onDarkMuted",
 
                   fontSize: "0.66rem",
 
@@ -706,10 +700,10 @@ export const AppLayout = () => {
 
           px: 3,
 
-          bgcolor: NAVY,
-          color: "white",
+          bgcolor: "app.brand.navy",
+          color: "common.white",
 
-          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.12)",
+          boxShadow: (theme) => theme.appShadows.topBar,
 
           transition: "left 220ms ease",
         }}
@@ -725,7 +719,7 @@ export const AppLayout = () => {
           <CalendarToday
             sx={{
               fontSize: 22,
-              color: LIGHT_NAVY,
+              color: "app.brand.navySoft",
             }}
           />
 
@@ -750,7 +744,7 @@ export const AppLayout = () => {
           <IconButton
             aria-label="Уведомления"
             sx={{
-              color: "white",
+              color: "common.white",
             }}
           >
             <NotificationsNoneOutlined />
@@ -776,7 +770,7 @@ export const AppLayout = () => {
               transition: "background-color 0.15s ease",
 
               "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.08)",
+                bgcolor: "app.navigation.hover",
               },
             }}
           >
@@ -785,8 +779,8 @@ export const AppLayout = () => {
                 width: 40,
                 height: 40,
 
-                bgcolor: LIGHT_NAVY,
-                color: NAVY,
+                bgcolor: "app.brand.navySoft",
+                color: "app.brand.navy",
 
                 fontSize: "0.9rem",
                 fontWeight: 700,
@@ -824,7 +818,7 @@ export const AppLayout = () => {
 
                   mt: 0.1,
 
-                  color: TEXT_WHITE_SECONDARY,
+                  color: "app.text.onDarkSecondary",
 
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -841,7 +835,7 @@ export const AppLayout = () => {
 
                 fontSize: 20,
 
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "app.text.onDarkSecondary",
               }}
             />
           </ButtonBase>
@@ -872,7 +866,7 @@ export const AppLayout = () => {
 
               borderRadius: 2,
 
-              boxShadow: "0 8px 28px rgba(0, 0, 0, 0.18)",
+              boxShadow: (theme) => theme.appShadows.menu,
 
               "&::before": {
                 content: '""',
@@ -923,8 +917,8 @@ export const AppLayout = () => {
 
               flexShrink: 0,
 
-              bgcolor: NAVY,
-              color: "white",
+              bgcolor: "app.brand.navy",
+              color: "common.white",
 
               fontSize: "0.95rem",
 
@@ -1041,7 +1035,7 @@ export const AppLayout = () => {
             md: 4,
           },
 
-          bgcolor: "#F7F8FA",
+          bgcolor: "background.default",
 
           borderTopLeftRadius: {
             xs: 0,

@@ -131,11 +131,11 @@ export const LoginPage = () => {
           sm: "center",
         },
         justifyContent: "center",
-        bgcolor: "#f7f8fa",
-        backgroundImage: {
+        bgcolor: "background.default",
+        backgroundImage: (theme) => ({
           xs: "none",
-          md: "radial-gradient(circle at 18% 82%, rgba(201, 109, 34, 0.10), transparent 32%), radial-gradient(circle at 82% 18%, rgba(52, 120, 185, 0.10), transparent 34%)",
-        },
+          md: theme.appGradients.auth,
+        }),
         px: {
           xs: 2,
           sm: 3,
@@ -171,10 +171,10 @@ export const LoginPage = () => {
             sm: 4,
             md: 5,
           },
-          boxShadow: {
+          boxShadow: (theme) => ({
             xs: "none",
-            sm: "0 18px 50px rgba(31, 41, 55, 0.08)",
-          },
+            sm: theme.appShadows.card,
+          }),
           p: {
             xs: 0,
             sm: 4,
@@ -210,7 +210,7 @@ export const LoginPage = () => {
                 borderRadius: 3,
                 bgcolor: "primary.main",
                 color: "primary.contrastText",
-                boxShadow: "0 10px 28px rgba(25, 118, 210, 0.24)",
+                boxShadow: (theme) => theme.appShadows.primary,
               }}
             >
               <CalendarMonthRounded fontSize="large" />
@@ -465,7 +465,7 @@ export const LoginPage = () => {
             onClose={hideErrorToast}
             sx={{
               width: "100%",
-              boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+              boxShadow: (theme) => theme.appShadows.toast,
               pointerEvents: "auto",
             }}
           >

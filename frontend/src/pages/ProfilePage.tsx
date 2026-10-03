@@ -32,9 +32,6 @@ import { AUTH_QUERY_KEY } from "../api/authQuery";
 
 import type { AuthUser } from "../types/Auth";
 
-const NAVY = "#16213E";
-const LIGHT_NAVY = "#E7ECF7";
-
 type UserRole = NonNullable<AuthUser["role"]>;
 
 const roleLabels: Record<UserRole, string> = {
@@ -72,20 +69,20 @@ interface ProfileContentProps {
 
 const getFieldStyles = (isEditing: boolean) => ({
   "& .MuiOutlinedInput-root": {
-    bgcolor: isEditing ? "background.paper" : "#EEF1F5",
+    bgcolor: isEditing ? "background.paper" : "app.background.field",
 
     transition: "background-color 0.2s ease, border-color 0.2s ease",
 
     "& fieldset": {
-      borderColor: isEditing ? "#C4CAD4" : "transparent",
+      borderColor: isEditing ? "app.border.field" : "transparent",
     },
 
     "&:hover fieldset": {
-      borderColor: isEditing ? "#9DA7B5" : "transparent",
+      borderColor: isEditing ? "app.border.field" : "transparent",
     },
 
     "&.Mui-focused fieldset": {
-      borderColor: NAVY,
+      borderColor: "app.brand.navy",
     },
 
     "&.Mui-error": {
@@ -104,7 +101,7 @@ const getFieldStyles = (isEditing: boolean) => ({
   },
 
   "& .MuiInputLabel-root.Mui-focused": {
-    color: NAVY,
+    color: "app.brand.navy",
   },
 
   "& .MuiInputLabel-root.Mui-error": {
@@ -523,7 +520,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
           md: "auto",
         },
 
-        bgcolor: "#F7F8FA",
+        bgcolor: "background.default",
       }}
     >
       {/* Мобильная версия профиля */}
@@ -544,7 +541,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
             zIndex: 1000,
 
-            bgcolor: "#F7F8FA",
+            bgcolor: "background.default",
 
             px: 2,
             pt: 2,
@@ -576,8 +573,8 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                   width: 88,
                   height: 88,
 
-                  bgcolor: NAVY,
-                  color: "white",
+                  bgcolor: "app.brand.navy",
+                  color: "common.white",
 
                   fontSize: "1.75rem",
                   fontWeight: 700,
@@ -600,16 +597,16 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     width: 30,
                     height: 30,
 
-                    bgcolor: LIGHT_NAVY,
-                    color: NAVY,
+                    bgcolor: "app.brand.navySoft",
+                    color: "app.brand.navy",
 
                     border: "2px solid",
                     borderColor: "background.paper",
 
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.12)",
+                    boxShadow: (theme) => theme.appShadows.avatar,
 
                     "&:hover": {
-                      bgcolor: "#D9E1F0",
+                      bgcolor: "app.brand.navySoft",
                     },
                   }}
                 >
@@ -671,22 +668,30 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                   width: 34,
                   height: 34,
 
-                  color: isEditing ? "#256029" : NAVY,
+                  color: isEditing
+                    ? "app.status.success.text"
+                    : "app.brand.navy",
 
-                  bgcolor: isEditing ? "#E6F4E8" : LIGHT_NAVY,
+                  bgcolor: isEditing
+                    ? "app.status.success.surface"
+                    : "app.brand.navySoft",
 
                   border: "1px solid",
 
-                  borderColor: isEditing ? "#B9D9BE" : "#CBD5E5",
+                  borderColor: isEditing
+                    ? "app.status.success.border"
+                    : "app.border.field",
 
-                  boxShadow: "0 1px 3px rgba(22, 33, 62, 0.08)",
+                  boxShadow: (theme) => theme.appShadows.button,
 
                   "&:hover": {
-                    bgcolor: isEditing ? "#D5ECD8" : "#D9E1F0",
+                    bgcolor: isEditing
+                      ? "app.status.success.surface"
+                      : "app.brand.navySoft",
                   },
 
                   "&.Mui-disabled": {
-                    bgcolor: "#EEF0F2",
+                    bgcolor: "app.background.field",
                   },
                 }}
               >
@@ -726,15 +731,15 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     height: 34,
 
                     color: "error.main",
-                    bgcolor: "#FDECEC",
+                    bgcolor: "app.status.error.surface",
 
                     border: "1px solid",
-                    borderColor: "#F2C8C8",
+                    borderColor: "app.status.error.border",
 
-                    boxShadow: "0 1px 3px rgba(22, 33, 62, 0.06)",
+                    boxShadow: (theme) => theme.appShadows.button,
 
                     "&:hover": {
-                      bgcolor: "#FAD7D7",
+                      bgcolor: "app.status.error.surface",
                     },
                   }}
                 >
@@ -932,7 +937,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
           <Typography
             variant="h4"
             sx={{
-              color: NAVY,
+              color: "app.brand.navy",
 
               fontWeight: 700,
               lineHeight: 1.2,
@@ -995,8 +1000,8 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                   width: 112,
                   height: 112,
 
-                  bgcolor: NAVY,
-                  color: "white",
+                  bgcolor: "app.brand.navy",
+                  color: "common.white",
 
                   fontSize: "2rem",
                   fontWeight: 700,
@@ -1019,16 +1024,16 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     width: 34,
                     height: 34,
 
-                    bgcolor: LIGHT_NAVY,
-                    color: NAVY,
+                    bgcolor: "app.brand.navySoft",
+                    color: "app.brand.navy",
 
                     border: "2px solid",
                     borderColor: "background.paper",
 
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.14)",
+                    boxShadow: (theme) => theme.appShadows.avatar,
 
                     "&:hover": {
-                      bgcolor: "#D9E1F0",
+                      bgcolor: "app.brand.navySoft",
                     },
                   }}
                 >
@@ -1047,7 +1052,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
               sx={{
                 mt: 2.5,
 
-                color: NAVY,
+                color: "app.brand.navy",
 
                 fontWeight: 700,
                 lineHeight: 1.25,
@@ -1081,8 +1086,8 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                   px: 1.5,
                   py: 0.6,
 
-                  bgcolor: LIGHT_NAVY,
-                  color: NAVY,
+                  bgcolor: "app.brand.navySoft",
+                  color: "app.brand.navy",
 
                   borderRadius: 10,
 
@@ -1131,7 +1136,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: NAVY,
+                    color: "app.brand.navy",
 
                     fontWeight: 700,
                   }}
@@ -1168,15 +1173,15 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                       height: 38,
 
                       color: "error.main",
-                      bgcolor: "#FDECEC",
+                      bgcolor: "app.status.error.surface",
 
                       border: "1px solid",
-                      borderColor: "#F2C8C8",
+                      borderColor: "app.status.error.border",
 
-                      boxShadow: "0 1px 3px rgba(22, 33, 62, 0.06)",
+                      boxShadow: (theme) => theme.appShadows.button,
 
                       "&:hover": {
-                        bgcolor: "#FAD7D7",
+                        bgcolor: "app.status.error.surface",
                       },
                     }}
                   >
@@ -1201,22 +1206,30 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     width: 38,
                     height: 38,
 
-                    color: isEditing ? "#256029" : NAVY,
+                    color: isEditing
+                      ? "app.status.success.text"
+                      : "app.brand.navy",
 
-                    bgcolor: isEditing ? "#E6F4E8" : LIGHT_NAVY,
+                    bgcolor: isEditing
+                      ? "app.status.success.surface"
+                      : "app.brand.navySoft",
 
                     border: "1px solid",
 
-                    borderColor: isEditing ? "#B9D9BE" : "#CBD5E5",
+                    borderColor: isEditing
+                      ? "app.status.success.border"
+                      : "app.border.field",
 
-                    boxShadow: "0 1px 3px rgba(22, 33, 62, 0.08)",
+                    boxShadow: (theme) => theme.appShadows.button,
 
                     "&:hover": {
-                      bgcolor: isEditing ? "#D5ECD8" : "#D9E1F0",
+                      bgcolor: isEditing
+                        ? "app.status.success.surface"
+                        : "app.brand.navySoft",
                     },
 
                     "&.Mui-disabled": {
-                      bgcolor: "#EEF0F2",
+                      bgcolor: "app.background.field",
                     },
                   }}
                 >
@@ -1453,7 +1466,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
               sx={{
                 width: "100%",
 
-                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+                boxShadow: (theme) => theme.appShadows.toast,
 
                 pointerEvents: "auto",
               }}
@@ -1470,7 +1483,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
               sx={{
                 width: "100%",
 
-                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.22)",
+                boxShadow: (theme) => theme.appShadows.toast,
 
                 pointerEvents: "auto",
               }}

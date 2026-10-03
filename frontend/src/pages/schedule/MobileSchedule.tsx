@@ -194,7 +194,8 @@ export const MobileSchedule = ({
                       borderRadius: "50%",
                       backgroundColor: eventTypeStyles[event.eventType].main,
                       boxShadow: selected
-                        ? "0 0 0 1px rgba(255, 255, 255, 0.9)"
+                        ? (theme) =>
+                            `0 0 0 1px ${theme.palette.app.overlay.whiteStrong}`
                         : "none",
                     }}
                   />

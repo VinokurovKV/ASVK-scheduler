@@ -118,7 +118,7 @@ export const TimeInput = ({
           px: 1.75,
 
           border: "1px solid",
-          borderColor: error ? "error.main" : "rgba(0, 0, 0, 0.23)",
+          borderColor: error ? "error.main" : "app.border.input",
 
           borderRadius: 1,
           cursor: "text",
