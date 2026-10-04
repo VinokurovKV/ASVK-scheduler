@@ -30,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getCurrentUser } from "../api/auth";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
+import { LogoutAllSessionsConfirmation } from "../components/auth/LogoutAllSessionsConfirmation";
 
 const appearanceOptions = [
   {
@@ -79,6 +80,8 @@ export const SettingsPage = () => {
   const [eventRemindersEnabled, setEventRemindersEnabled] = useState(true);
   const [meetingNotificationsEnabled, setMeetingNotificationsEnabled] =
     useState(true);
+  const [isLogoutAllConfirmationOpen, setIsLogoutAllConfirmationOpen] =
+    useState(false);
 
   const { data: user, isLoading } = useQuery({
     queryKey: AUTH_QUERY_KEY,
@@ -758,7 +761,11 @@ export const SettingsPage = () => {
             }}
           >
             <ButtonBase
-              disabled
+              onClick={() =>
+                navigate("/settings/password", {
+                  state: { from: "/settings" },
+                })
+              }
               sx={{
                 display: "flex",
                 minHeight: {
@@ -776,9 +783,7 @@ export const SettingsPage = () => {
                   xs: 1,
                   md: 1.5,
                 },
-                opacity: 1,
                 textAlign: "left",
-                "&.Mui-disabled": { opacity: 1 },
               }}
             >
               <LockOutlined sx={{ flexShrink: 0, color: "app.brand.navy" }} />
@@ -807,7 +812,11 @@ export const SettingsPage = () => {
             </ButtonBase>
 
             <ButtonBase
-              disabled
+              onClick={() =>
+                navigate("/settings/sessions", {
+                  state: { from: "/settings" },
+                })
+              }
               sx={{
                 display: "flex",
                 minHeight: {
@@ -829,9 +838,7 @@ export const SettingsPage = () => {
                   xs: 1,
                   md: 1.5,
                 },
-                opacity: 1,
                 textAlign: "left",
-                "&.Mui-disabled": { opacity: 1 },
               }}
             >
               <DevicesOutlined
@@ -862,7 +869,7 @@ export const SettingsPage = () => {
             </ButtonBase>
 
             <ButtonBase
-              disabled
+              onClick={() => setIsLogoutAllConfirmationOpen(true)}
               sx={{
                 display: "flex",
                 minHeight: {
@@ -1073,6 +1080,11 @@ export const SettingsPage = () => {
           </ButtonBase>
         </Box>
       </Paper>
+
+      <LogoutAllSessionsConfirmation
+        open={isLogoutAllConfirmationOpen}
+        onClose={() => setIsLogoutAllConfirmationOpen(false)}
+      />
     </Box>
   );
 };

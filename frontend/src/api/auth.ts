@@ -1,5 +1,7 @@
 import type {
+  AuthSessionInfo,
   AuthUser,
+  ChangePasswordInput,
   LoginInput,
   RegisterInput,
   UpdateProfileInput,
@@ -136,6 +138,40 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 export const logout = async () => {
   const response = await apiFetch("/auth/logout", {
     method: "POST",
+  });
+
+  if (!response.ok) {
+    throw await getApiError(response);
+  }
+};
+
+export const logoutAllSessions = async () => {
+  const response = await apiFetch("/auth/logout-all", {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw await getApiError(response);
+  }
+};
+
+export const getActiveSessions = async (): Promise<AuthSessionInfo[]> => {
+  const response = await apiFetch("/auth/sessions");
+
+  if (!response.ok) {
+    throw await getApiError(response);
+  }
+
+  return response.json();
+};
+
+export const changePassword = async (input: ChangePasswordInput) => {
+  const response = await apiFetch("/auth/password", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {

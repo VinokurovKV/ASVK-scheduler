@@ -46,6 +46,11 @@ export interface LoginInput {
   rememberMe?: boolean;
 }
 
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface UpdateProfileInput {
   firstName: string;
   lastName: string;
@@ -55,4 +60,16 @@ export interface UpdateProfileInput {
 
   role: UserRole;
   groupNumber?: string;
+}
+
+export type SessionDeviceType = "PHONE" | "LAPTOP" | "DESKTOP";
+
+export interface AuthSessionInfo {
+  id: number;
+  deviceType: SessionDeviceType;
+  deviceName: string;
+  current: boolean;
+  online: boolean;
+  lastActiveAt: string;
+  createdAt: string;
 }

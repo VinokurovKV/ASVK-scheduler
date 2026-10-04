@@ -4,6 +4,8 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute.tsx";
 
 import { AppLayout } from "./layout/AppLayout.tsx";
 
+import { ActiveSessionsPage } from "./pages/ActiveSessionsPage.tsx";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage.tsx";
 import { EventsPage } from "./pages/EventsPage.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
@@ -33,6 +35,10 @@ const App = () => {
           <Route path="profile" element={<ProfilePage />} />
 
           <Route path="settings" element={<SettingsPage />} />
+
+          <Route path="settings/sessions" element={<ActiveSessionsPage />} />
+
+          <Route path="settings/password" element={<ChangePasswordPage />} />
         </Route>
       </Route>
     </Routes>

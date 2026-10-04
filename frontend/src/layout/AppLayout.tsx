@@ -4,6 +4,7 @@ import {
   CalendarToday,
   ChevronLeft,
   ChevronRight,
+  Close,
   Event,
   Groups,
   Home,
@@ -21,8 +22,11 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Box,
+  Button,
   ButtonBase,
+  Dialog,
   Divider,
+  Drawer,
   IconButton,
   List,
   ListItemButton,
@@ -31,9 +35,12 @@ import {
   Menu,
   MenuItem,
   Paper,
+  Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -89,9 +96,13 @@ export const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isMobileViewport = useMediaQuery(theme.breakpoints.down("md"));
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCollapseTooltipOpen, setIsCollapseTooltipOpen] = useState(false);
+  const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] =
+    useState(false);
 
   const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(
     null,
@@ -109,6 +120,7 @@ export const AppLayout = () => {
 
     onSuccess: () => {
       setUserMenuAnchor(null);
+      setIsLogoutConfirmationOpen(false);
 
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
 
@@ -120,6 +132,13 @@ export const AppLayout = () => {
 
   const isProfilePage = location.pathname === "/profile";
   const isSettingsPage = location.pathname === "/settings";
+  const isActiveSessionsPage = location.pathname === "/settings/sessions";
+  const isChangePasswordPage = location.pathname === "/settings/password";
+  const isMobileSubpage =
+    isProfilePage ||
+    isSettingsPage ||
+    isActiveSessionsPage ||
+    isChangePasswordPage;
 
   const currentSidebarWidth = isSidebarCollapsed
     ? COLLAPSED_SIDEBAR_WIDTH
@@ -200,6 +219,19 @@ export const AppLayout = () => {
     navigate(settingsFrom);
   };
 
+  const handleActiveSessionsBack = () => {
+    navigate("/settings");
+  };
+
+  const handleChangePasswordBack = () => {
+    navigate("/settings");
+  };
+
+  const handleLogoutClick = () => {
+    setUserMenuAnchor(null);
+    setIsLogoutConfirmationOpen(true);
+  };
+
   const handleUserMenuOpen = (element: HTMLElement) => {
     const avatar = element.querySelector<HTMLElement>(".MuiAvatar-root");
 
@@ -256,10 +288,16 @@ export const AppLayout = () => {
           boxShadow: (theme) => theme.appShadows.appBar,
         }}
       >
-        {isProfilePage || isSettingsPage ? (
+        {isMobileSubpage ? (
           <IconButton
             onClick={
-              isProfilePage ? handleProfileBack : handleSettingsBack
+              isProfilePage
+                ? handleProfileBack
+                : isActiveSessionsPage
+                  ? handleActiveSessionsBack
+                  : isChangePasswordPage
+                    ? handleChangePasswordBack
+                  : handleSettingsBack
             }
             aria-label="Назад"
             sx={{
@@ -286,7 +324,7 @@ export const AppLayout = () => {
           sx={{
             minWidth: 0,
 
-            fontWeight: isProfilePage || isSettingsPage ? 600 : 700,
+            fontWeight: isMobileSubpage ? 600 : 700,
 
             textAlign: "center",
 
@@ -299,6 +337,10 @@ export const AppLayout = () => {
             ? "Профиль"
             : isSettingsPage
               ? "Настройки"
+              : isActiveSessionsPage
+                ? "Активные сессии"
+                : isChangePasswordPage
+                  ? "Смена пароля"
               : "ASVK Schedule"}
         </Typography>
 
@@ -1011,10 +1053,7 @@ export const AppLayout = () => {
           <ListItemText>Профиль</ListItemText>
         </MenuItem>
 
-        <MenuItem
-          onClick={handleSettingsClick}
-          selected={isSettingsPage}
-        >
+        <MenuItem onClick={handleSettingsClick} selected={isSettingsPage}>
           <ListItemIcon>
             <SettingsOutlined fontSize="small" />
           </ListItemIcon>
@@ -1025,7 +1064,7 @@ export const AppLayout = () => {
         <Divider />
 
         <MenuItem
-          onClick={() => logoutMutation.mutate()}
+          onClick={handleLogoutClick}
           disabled={logoutMutation.isPending}
           sx={{
             color: "error.main",
@@ -1042,6 +1081,227 @@ export const AppLayout = () => {
           <ListItemText>Выйти</ListItemText>
         </MenuItem>
       </Menu>
+
+      <Drawer
+        anchor="bottom"
+        open={isMobileViewport && isLogoutConfirmationOpen}
+        onClose={() => {
+          if (!logoutMutation.isPending) {
+            setIsLogoutConfirmationOpen(false);
+          }
+        }}
+        slotProps={{
+          paper: {
+            role: "dialog",
+            "aria-modal": true,
+            "aria-labelledby": "logout-confirmation-title",
+            sx: {
+              height: "38dvh",
+              minHeight: 270,
+              maxHeight: 340,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              px: 2,
+              pt: 2.5,
+              pb: "max(20px, env(safe-area-inset-bottom))",
+            },
+          },
+        }}
+      >
+        <Stack
+          sx={{
+            width: "100%",
+            maxWidth: 440,
+            height: "100%",
+            mx: "auto",
+            alignItems: "center",
+          }}
+        >
+          <Box
+            sx={{
+              display: "grid",
+              width: 72,
+              height: 72,
+              flexShrink: 0,
+              placeItems: "center",
+              borderRadius: "50%",
+              bgcolor: "app.status.error.surface",
+              color: "error.main",
+            }}
+          >
+            <Logout sx={{ fontSize: 44 }} />
+          </Box>
+
+          <Typography
+            id="logout-confirmation-title"
+            sx={{
+              mt: 1.25,
+              fontSize: "1.05rem",
+              fontWeight: 750,
+            }}
+          >
+            Выйти из аккаунта?
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 0.5,
+              px: 2,
+              textAlign: "center",
+            }}
+          >
+            Вы уверены, что хотите выйти из текущей сессии?
+          </Typography>
+
+          <Stack spacing={1} sx={{ width: "100%", mt: "auto" }}>
+            <Button
+              variant="contained"
+              color="error"
+              fullWidth
+              startIcon={<Logout />}
+              disabled={logoutMutation.isPending}
+              onClick={() => logoutMutation.mutate()}
+              sx={{ minHeight: 44, borderRadius: 3.5 }}
+            >
+              Выйти
+            </Button>
+
+            <Button
+              fullWidth
+              disabled={logoutMutation.isPending}
+              onClick={() => setIsLogoutConfirmationOpen(false)}
+              sx={{
+                minHeight: 44,
+                borderRadius: 3.5,
+                bgcolor: "app.background.field",
+                color: "text.primary",
+                "&:hover": {
+                  bgcolor: "app.background.field",
+                },
+              }}
+            >
+              Отмена
+            </Button>
+          </Stack>
+        </Stack>
+      </Drawer>
+
+      <Dialog
+        open={!isMobileViewport && isLogoutConfirmationOpen}
+        onClose={() => {
+          if (!logoutMutation.isPending) {
+            setIsLogoutConfirmationOpen(false);
+          }
+        }}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="desktop-logout-confirmation-title"
+        slotProps={{
+          paper: {
+            sx: {
+              position: "relative",
+              maxWidth: 460,
+              borderRadius: 4,
+              p: 3,
+            },
+          },
+        }}
+      >
+        <IconButton
+          aria-label="Закрыть подтверждение выхода"
+          disabled={logoutMutation.isPending}
+          onClick={() => setIsLogoutConfirmationOpen(false)}
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            color: "text.secondary",
+          }}
+        >
+          <Close />
+        </IconButton>
+
+        <Stack sx={{ alignItems: "center", pt: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              width: 72,
+              height: 72,
+              placeItems: "center",
+              borderRadius: "50%",
+              bgcolor: "app.status.error.surface",
+              color: "error.main",
+            }}
+          >
+            <Logout sx={{ fontSize: 44 }} />
+          </Box>
+
+          <Typography
+            id="desktop-logout-confirmation-title"
+            sx={{
+              mt: 1.5,
+              fontSize: "1.15rem",
+              fontWeight: 750,
+            }}
+          >
+            Выйти из аккаунта?
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 0.75, textAlign: "center" }}
+          >
+            Вы уверены, что хотите выйти из текущей сессии?
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 0.5,
+              color: (theme) => alpha(theme.palette.text.primary, 0.35),
+              fontFamily: (theme) => theme.typography.body1.fontFamily,
+              fontSize: "0.75rem",
+              textAlign: "center",
+            }}
+          >
+            Вы снова сможете войти в любой момент
+          </Typography>
+
+          <Stack direction="row" spacing={1.5} sx={{ width: "100%", mt: 3 }}>
+            <Button
+              fullWidth
+              disabled={logoutMutation.isPending}
+              onClick={() => setIsLogoutConfirmationOpen(false)}
+              sx={{
+                minHeight: 44,
+                borderRadius: 3.5,
+                bgcolor: "app.background.field",
+                color: "text.primary",
+                "&:hover": {
+                  bgcolor: "app.background.field",
+                },
+              }}
+            >
+              Отмена
+            </Button>
+
+            <Button
+              variant="contained"
+              color="error"
+              fullWidth
+              startIcon={<Logout />}
+              disabled={logoutMutation.isPending}
+              onClick={() => logoutMutation.mutate()}
+              sx={{ minHeight: 44, borderRadius: 3.5 }}
+            >
+              Выйти
+            </Button>
+          </Stack>
+        </Stack>
+      </Dialog>
 
       {/* Содержимое страницы */}
       <Box
