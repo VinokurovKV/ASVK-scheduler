@@ -90,9 +90,11 @@ model PasswordCredential {
 }
 
 model AuthSession {
-  id        Int      @id @default(autoincrement())
-  tokenHash String   @unique
-  expiresAt DateTime
+  id           Int      @id @default(autoincrement())
+  tokenHash    String   @unique
+  expiresAt    DateTime
+  userAgent    String?
+  lastActiveAt DateTime @default(now())
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)

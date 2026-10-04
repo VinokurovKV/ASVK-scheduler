@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import type {
+  ChangePasswordInput,
   LoginInput,
   RegisterInput,
   UpdateProfileInput,
@@ -79,11 +80,67 @@ const createSessionDetails = (rememberMe: boolean) => {
   };
 };
 
+const getBrowserName = (userAgent: string) => {
+  if (/Edg\//i.test(userAgent)) return 'Edge';
+  if (/CriOS|Chrome/i.test(userAgent)) return 'Chrome';
+  if (/FxiOS|Firefox/i.test(userAgent)) return 'Firefox';
+  if (/Safari/i.test(userAgent)) return 'Safari';
+
+  return null;
+};
+
+const getDeviceDetails = (userAgent?: string | null) => {
+  const normalizedUserAgent = userAgent ?? '';
+  const browserName = getBrowserName(normalizedUserAgent);
+
+  const withBrowser = (deviceName: string) => ({
+    deviceName: browserName ? `${deviceName} · ${browserName}` : deviceName,
+  });
+
+  if (/iPhone/i.test(normalizedUserAgent)) {
+    return { deviceType: 'PHONE' as const, ...withBrowser('iPhone') };
+  }
+
+  if (/iPad|Macintosh.*Mobile/i.test(normalizedUserAgent)) {
+    return { deviceType: 'PHONE' as const, ...withBrowser('iPad') };
+  }
+
+  if (/Android/i.test(normalizedUserAgent)) {
+    return {
+      deviceType: 'PHONE' as const,
+      ...withBrowser('Android'),
+    };
+  }
+
+  if (/Macintosh|Mac OS X/i.test(normalizedUserAgent)) {
+    return { deviceType: 'LAPTOP' as const, ...withBrowser('Mac') };
+  }
+
+  if (/Windows/i.test(normalizedUserAgent)) {
+    return {
+      deviceType: 'DESKTOP' as const,
+      ...withBrowser('Windows PC'),
+    };
+  }
+
+  if (/Linux/i.test(normalizedUserAgent)) {
+    return {
+      deviceType: 'DESKTOP' as const,
+      ...withBrowser('Linux PC'),
+    };
+  }
+
+  return {
+    deviceType: 'DESKTOP' as const,
+    deviceName: 'Неизвестное устройство',
+  };
+};
+
 @Injectable()
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async register(input: RegisterInput) {
+  async register(input: RegisterInput, userAgent?: string) {
     if (!input || typeof input !== 'object') {
       throw new BadRequestException('Registration data is required');
     }
@@ -186,6 +243,7 @@ export class AuthService {
             create: {
               tokenHash: session.tokenHash,
               expiresAt: session.expiresAt,
+              userAgent,
             },
           },
         },
@@ -276,7 +334,11 @@ export class AuthService {
     };
   }
 
-  async createSession(userId: number, rememberMe: boolean) {
+  async createSession(
+    userId: number,
+    rememberMe: boolean,
+    userAgent?: string,
+  ) {
     const session = createSessionDetails(rememberMe);
 
     await this.prisma.$transaction([
@@ -292,6 +354,7 @@ export class AuthService {
           tokenHash: session.tokenHash,
           expiresAt: session.expiresAt,
           userId,
+          userAgent,
         },
       }),
     ]);
@@ -303,7 +366,7 @@ export class AuthService {
     };
   }
 
-  async findUserBySession(token: string) {
+  async findUserBySession(token: string, userAgent?: string) {
     const session = await this.prisma.authSession.findUnique({
       where: {
         tokenHash: hashSessionToken(token),
@@ -311,6 +374,8 @@ export class AuthService {
       select: {
         id: true,
         expiresAt: true,
+        lastActiveAt: true,
+        userAgent: true,
         user: {
           select: publicUserSelect,
         },
@@ -329,13 +394,121 @@ export class AuthService {
       throw new UnauthorizedException('Authentication required');
     }
 
+    const now = new Date();
+
+    const shouldRefreshActivity =
+      now.getTime() - session.lastActiveAt.getTime() >= 60_000;
+    const shouldSaveUserAgent = !session.userAgent && Boolean(userAgent);
+
+    if (shouldRefreshActivity || shouldSaveUserAgent) {
+      await this.prisma.authSession.update({
+        where: {
+          id: session.id,
+        },
+        data: {
+          ...(shouldRefreshActivity ? { lastActiveAt: now } : {}),
+          ...(shouldSaveUserAgent ? { userAgent } : {}),
+        },
+      });
+    }
+
     return session.user;
+  }
+
+  async getSessions(userId: number, currentToken: string) {
+    const currentTokenHash = hashSessionToken(currentToken);
+    const now = new Date();
+    const onlineThreshold = now.getTime() - 5 * 60 * 1000;
+
+    const sessions = await this.prisma.authSession.findMany({
+      where: {
+        userId,
+        expiresAt: {
+          gt: now,
+        },
+      },
+      select: {
+        id: true,
+        tokenHash: true,
+        userAgent: true,
+        lastActiveAt: true,
+        createdAt: true,
+      },
+      orderBy: {
+        lastActiveAt: 'desc',
+      },
+    });
+
+    return sessions.map((session) => ({
+      id: session.id,
+      ...getDeviceDetails(session.userAgent),
+      current: session.tokenHash === currentTokenHash,
+      online: session.lastActiveAt.getTime() >= onlineThreshold,
+      lastActiveAt: session.lastActiveAt,
+      createdAt: session.createdAt,
+    }));
   }
 
   async deleteSession(token: string) {
     await this.prisma.authSession.deleteMany({
       where: {
         tokenHash: hashSessionToken(token),
+      },
+    });
+  }
+
+  async deleteAllSessions(userId: number) {
+    await this.prisma.authSession.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
+  async changePassword(userId: number, input: ChangePasswordInput) {
+    if (!input || typeof input !== 'object') {
+      throw new BadRequestException('Password data is required');
+    }
+
+    const currentPassword =
+      typeof input.currentPassword === 'string' ? input.currentPassword : '';
+    const newPassword =
+      typeof input.newPassword === 'string' ? input.newPassword : '';
+
+    if (!currentPassword) {
+      throw new BadRequestException('Current password is required');
+    }
+
+    validatePassword(newPassword);
+
+    const credential = await this.prisma.passwordCredential.findUnique({
+      where: {
+        userId,
+      },
+      select: {
+        passwordHash: true,
+      },
+    });
+
+    if (
+      !credential ||
+      !(await verifyPassword(currentPassword, credential.passwordHash))
+    ) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (await verifyPassword(newPassword, credential.passwordHash)) {
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
+    }
+
+    await this.prisma.passwordCredential.update({
+      where: {
+        userId,
+      },
+      data: {
+        passwordHash: await hashPassword(newPassword),
       },
     });
   }

@@ -14,6 +14,7 @@ import type { Request, Response } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { AuthenticatedRequest } from './authenticated-request.js';
 import type {
+  ChangePasswordInput,
   LoginInput,
   RegisterInput,
   UpdateProfileInput,
@@ -34,9 +35,13 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   async register(
     @Body() body: RegisterInput,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { user, session } = await this.authService.register(body);
+    const { user, session } = await this.authService.register(
+      body,
+      request.get('user-agent'),
+    );
 
     response.cookie(SESSION_COOKIE_NAME, session.token, {
       ...sessionCookieOptions,
@@ -51,12 +56,14 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   async login(
     @Body() body: LoginInput,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const user = await this.authService.login(body);
     const session = await this.authService.createSession(
       user.id,
       body.rememberMe === true,
+      request.get('user-agent'),
     );
 
     response.cookie(SESSION_COOKIE_NAME, session.token, {
@@ -82,10 +89,41 @@ export class AuthController {
     response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
   }
 
+  @Post('logout-all')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(SessionAuthGuard)
+  async logoutAll(
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.authService.deleteAllSessions(request.user.id);
+
+    response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
+  }
+
   @Get('me')
   @UseGuards(SessionAuthGuard)
   me(@Req() request: AuthenticatedRequest) {
     return request.user;
+  }
+
+  @Get('sessions')
+  @UseGuards(SessionAuthGuard)
+  sessions(@Req() request: AuthenticatedRequest) {
+    return this.authService.getSessions(
+      request.user.id,
+      request.sessionToken,
+    );
+  }
+
+  @Patch('password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(SessionAuthGuard, ThrottlerGuard)
+  changePassword(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: ChangePasswordInput,
+  ) {
+    return this.authService.changePassword(request.user.id, body);
   }
 
   @Patch('me')

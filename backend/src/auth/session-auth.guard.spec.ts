@@ -8,6 +8,7 @@ const createContext = (cookie?: string) => {
     headers: {
       cookie,
     },
+    get: () => undefined,
   };
 
   const context = {
@@ -47,7 +48,11 @@ describe('SessionAuthGuard', () => {
     const { context, request } = createContext('asvk_session=test-token');
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
-    expect(authService.findUserBySession).toHaveBeenCalledWith('test-token');
+    expect(authService.findUserBySession).toHaveBeenCalledWith(
+      'test-token',
+      undefined,
+    );
     expect(request).toHaveProperty('user', user);
+    expect(request).toHaveProperty('sessionToken', 'test-token');
   });
 });

@@ -21,8 +21,12 @@ export class SessionAuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentication required');
     }
 
-    const user = await this.authService.findUserBySession(token);
+    const user = await this.authService.findUserBySession(
+      token,
+      request.get('user-agent'),
+    );
 
+    (request as AuthenticatedRequest).sessionToken = token;
     (request as AuthenticatedRequest).user = user;
 
     return true;

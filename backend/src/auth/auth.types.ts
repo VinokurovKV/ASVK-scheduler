@@ -22,6 +22,11 @@ export interface LoginInput {
   rememberMe?: boolean;
 }
 
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface UpdateProfileInput {
   firstName: string;
   lastName: string;
