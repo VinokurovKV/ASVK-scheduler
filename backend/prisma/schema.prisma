@@ -54,26 +54,33 @@ enum UserRole {
   EMPLOYEE
 }
 
+enum SupportRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
 model User {
-  id           Int          @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  name         String
-  firstName    String?
-  lastName     String?
+  name      String
+  firstName String?
+  lastName  String?
 
-  username     String?      @unique
-  email        String       @unique
+  username String? @unique
+  email    String  @unique
 
-  role         UserRole?
-  groupNumber  String?
+  role        UserRole?
+  groupNumber String?
 
   authProvider AuthProvider @default(STANDARD)
 
-  calendars      Calendar[]
-  createdEvents  Event[]            @relation("EventCreator")
-  participations EventParticipant[]
-  credential     PasswordCredential?
-  sessions       AuthSession[]
+  calendars       Calendar[]
+  createdEvents   Event[]             @relation("EventCreator")
+  participations  EventParticipant[]
+  credential      PasswordCredential?
+  sessions        AuthSession[]
+  supportRequests SupportRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -103,6 +110,29 @@ model AuthSession {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model SupportRequest {
+  id          Int                  @id @default(autoincrement())
+  topic       String
+  category    String
+  description String
+  replyEmail  String
+  status      SupportRequestStatus @default(OPEN)
+
+  attachmentName     String?
+  attachmentMimeType String?
+  attachmentSize     Int?
+  attachmentData     Bytes?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status, createdAt])
 }
 
 model Calendar {
