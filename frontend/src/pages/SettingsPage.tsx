@@ -1022,7 +1022,7 @@ export const SettingsPage = () => {
           </Stack>
 
           <ButtonBase
-            disabled
+            onClick={() => navigate("/support", { state: { from: "/settings" } })}
             sx={{
               display: "flex",
               minHeight: {
@@ -1049,9 +1049,7 @@ export const SettingsPage = () => {
                 xs: 1,
                 md: 1.5,
               },
-              opacity: 1,
               textAlign: "left",
-              "&.Mui-disabled": { opacity: 1 },
             }}
           >
             <ChatOutlined sx={{ flexShrink: 0, color: "app.brand.navy" }} />

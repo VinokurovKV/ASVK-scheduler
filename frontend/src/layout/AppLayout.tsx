@@ -134,11 +134,13 @@ export const AppLayout = () => {
   const isSettingsPage = location.pathname === "/settings";
   const isActiveSessionsPage = location.pathname === "/settings/sessions";
   const isChangePasswordPage = location.pathname === "/settings/password";
+  const isSupportPage = location.pathname === "/support";
   const isMobileSubpage =
     isProfilePage ||
     isSettingsPage ||
     isActiveSessionsPage ||
-    isChangePasswordPage;
+    isChangePasswordPage ||
+    isSupportPage;
 
   const currentSidebarWidth = isSidebarCollapsed
     ? COLLAPSED_SIDEBAR_WIDTH
@@ -227,6 +229,10 @@ export const AppLayout = () => {
     navigate("/settings");
   };
 
+  const handleSupportBack = () => {
+    navigate("/settings");
+  };
+
   const handleLogoutClick = () => {
     setUserMenuAnchor(null);
     setIsLogoutConfirmationOpen(true);
@@ -274,7 +280,9 @@ export const AppLayout = () => {
           top: 0,
           zIndex: 1200,
 
-          gridTemplateColumns: "48px minmax(0, 1fr) 40px 48px",
+          gridTemplateColumns: isSupportPage
+            ? "48px minmax(0, 1fr) 48px"
+            : "48px minmax(0, 1fr) 40px 48px",
 
           alignItems: "center",
 
@@ -297,7 +305,9 @@ export const AppLayout = () => {
                   ? handleActiveSessionsBack
                   : isChangePasswordPage
                     ? handleChangePasswordBack
-                  : handleSettingsBack
+                    : isSupportPage
+                      ? handleSupportBack
+                      : handleSettingsBack
             }
             aria-label="Назад"
             sx={{
@@ -341,18 +351,22 @@ export const AppLayout = () => {
                 ? "Активные сессии"
                 : isChangePasswordPage
                   ? "Смена пароля"
-              : "ASVK Schedule"}
+                  : isSupportPage
+                    ? "Поддержка"
+                    : "ASVK Schedule"}
         </Typography>
 
-        <IconButton
-          aria-label="Уведомления"
-          sx={{
-            justifySelf: "center",
-            color: "common.white",
-          }}
-        >
-          <NotificationsNoneOutlined />
-        </IconButton>
+        {!isSupportPage && (
+          <IconButton
+            aria-label="Уведомления"
+            sx={{
+              justifySelf: "center",
+              color: "common.white",
+            }}
+          >
+            <NotificationsNoneOutlined />
+          </IconButton>
+        )}
 
         <IconButton
           aria-label="Меню пользователя"
@@ -1335,7 +1349,7 @@ export const AppLayout = () => {
           },
 
           pb: {
-            xs: isProfilePage ? 0 : 10,
+            xs: isProfilePage ? 0 : isSupportPage ? 2 : 10,
             md: 4,
           },
 
@@ -1358,7 +1372,7 @@ export const AppLayout = () => {
       </Box>
 
       {/* Нижняя навигация на мобильных устройствах */}
-      {!isProfilePage && (
+      {!isProfilePage && !isSupportPage && (
         <Paper
           elevation={8}
           sx={{
