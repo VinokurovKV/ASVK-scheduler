@@ -119,6 +119,7 @@ export const AppLayout = () => {
   });
 
   const isProfilePage = location.pathname === "/profile";
+  const isSettingsPage = location.pathname === "/settings";
 
   const currentSidebarWidth = isSidebarCollapsed
     ? COLLAPSED_SIDEBAR_WIDTH
@@ -156,6 +157,13 @@ export const AppLayout = () => {
       } | null
     )?.from ?? "/";
 
+  const settingsFrom =
+    (
+      location.state as {
+        from?: string;
+      } | null
+    )?.from ?? "/";
+
   const handleProfileClick = () => {
     setUserMenuAnchor(null);
 
@@ -170,8 +178,26 @@ export const AppLayout = () => {
     });
   };
 
+  const handleSettingsClick = () => {
+    setUserMenuAnchor(null);
+
+    if (isSettingsPage) {
+      return;
+    }
+
+    navigate("/settings", {
+      state: {
+        from: location.pathname,
+      },
+    });
+  };
+
   const handleProfileBack = () => {
     navigate(profileFrom);
+  };
+
+  const handleSettingsBack = () => {
+    navigate(settingsFrom);
   };
 
   const handleUserMenuOpen = (element: HTMLElement) => {
@@ -230,9 +256,11 @@ export const AppLayout = () => {
           boxShadow: (theme) => theme.appShadows.appBar,
         }}
       >
-        {isProfilePage ? (
+        {isProfilePage || isSettingsPage ? (
           <IconButton
-            onClick={handleProfileBack}
+            onClick={
+              isProfilePage ? handleProfileBack : handleSettingsBack
+            }
             aria-label="Назад"
             sx={{
               color: "common.white",
@@ -258,7 +286,7 @@ export const AppLayout = () => {
           sx={{
             minWidth: 0,
 
-            fontWeight: isProfilePage ? 600 : 700,
+            fontWeight: isProfilePage || isSettingsPage ? 600 : 700,
 
             textAlign: "center",
 
@@ -267,7 +295,11 @@ export const AppLayout = () => {
             whiteSpace: "nowrap",
           }}
         >
-          {isProfilePage ? "Профиль" : "ASVK Schedule"}
+          {isProfilePage
+            ? "Профиль"
+            : isSettingsPage
+              ? "Настройки"
+              : "ASVK Schedule"}
         </Typography>
 
         <IconButton
@@ -979,8 +1011,10 @@ export const AppLayout = () => {
           <ListItemText>Профиль</ListItemText>
         </MenuItem>
 
-        {/* TODO: добавить страницу и функциональность настроек пользователя */}
-        <MenuItem disabled>
+        <MenuItem
+          onClick={handleSettingsClick}
+          selected={isSettingsPage}
+        >
           <ListItemIcon>
             <SettingsOutlined fontSize="small" />
           </ListItemIcon>

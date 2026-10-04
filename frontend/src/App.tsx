@@ -11,6 +11,7 @@ import { MeetingsPage } from "./pages/MeetingsPage.tsx";
 import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage.tsx";
 import { SchedulePage } from "./pages/SchedulePage.tsx";
+import { SettingsPage } from "./pages/SettingsPage.tsx";
 
 const App = () => {
   return (
@@ -30,6 +31,8 @@ const App = () => {
           <Route path="meetings" element={<MeetingsPage />} />
 
           <Route path="profile" element={<ProfilePage />} />
+
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>
     </Routes>
