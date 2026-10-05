@@ -13,7 +13,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -99,7 +98,7 @@ const SessionCard = ({ session }: { session: AuthSessionInfo }) => {
         display: "flex",
         minHeight: 98,
         alignItems: "center",
-        borderColor: (theme) => alpha(theme.palette.app.brand.navy, 0.07),
+        borderColor: "app.border.card",
         borderRadius: 3,
         boxShadow: "none",
         gap: 1.5,
@@ -115,8 +114,9 @@ const SessionCard = ({ session }: { session: AuthSessionInfo }) => {
           flexShrink: 0,
           placeItems: "center",
           borderRadius: 2.5,
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          color: "app.brand.navy",
+          bgcolor: (theme) =>
+            theme.alpha(theme.vars.palette.primary.main, 0.08),
+          color: "app.brand.accent",
           "& svg": { fontSize: 30 },
         }}
       >
@@ -168,7 +168,7 @@ const SessionCard = ({ session }: { session: AuthSessionInfo }) => {
           flexShrink: 0,
           borderRadius: 2,
           bgcolor: session.current
-            ? (theme) => alpha(theme.palette.primary.main, 0.08)
+            ? (theme) => theme.alpha(theme.vars.palette.primary.main, 0.08)
             : "app.status.error.surface",
           color: session.current ? "primary.main" : "error.main",
           fontSize: "0.72rem",
@@ -254,7 +254,8 @@ export const ActiveSessionsPage = () => {
           minHeight: 68,
           mt: 1.25,
           border: "1px solid",
-          borderColor: (theme) => alpha(theme.palette.error.main, 0.08),
+          borderColor: (theme) =>
+            theme.alpha(theme.vars.palette.error.main, 0.08),
           borderRadius: 3,
           bgcolor: "app.status.error.surface",
           color: "error.main",
@@ -294,7 +295,8 @@ export const ActiveSessionsPage = () => {
           minHeight: 84,
           mt: 1.5,
           alignItems: "center",
-          borderColor: (theme) => alpha(theme.palette.error.main, 0.08),
+          borderColor: (theme) =>
+            theme.alpha(theme.vars.palette.error.main, 0.08),
           borderRadius: 3,
           boxShadow: "none",
           bgcolor: "app.status.error.surface",
@@ -311,7 +313,8 @@ export const ActiveSessionsPage = () => {
             flexShrink: 0,
             placeItems: "center",
             borderRadius: 2.5,
-            bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+            bgcolor: (theme) =>
+              theme.alpha(theme.vars.palette.error.main, 0.1),
             color: "error.main",
           }}
         >

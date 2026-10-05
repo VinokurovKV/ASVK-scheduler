@@ -23,7 +23,6 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../api/auth";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
 import { LogoutAllSessionsConfirmation } from "../components/auth/LogoutAllSessionsConfirmation";
+import { useAppTheme } from "../theme/theme-context";
 
 const appearanceOptions = [
   {
@@ -77,6 +77,7 @@ const getRoleLabel = (
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
+  const { themePreference, setThemePreference } = useAppTheme();
   const [eventRemindersEnabled, setEventRemindersEnabled] = useState(true);
   const [meetingNotificationsEnabled, setMeetingNotificationsEnabled] =
     useState(true);
@@ -403,12 +404,12 @@ export const SettingsPage = () => {
             }}
           >
             {appearanceOptions.map((option) => {
-              const isSelected = option.value === "light";
+              const isSelected = option.value === themePreference;
 
               return (
                 <ButtonBase
                   key={option.value}
-                  disabled={!isSelected}
+                  onClick={() => setThemePreference(option.value)}
                   aria-label={option.label}
                   aria-pressed={isSelected}
                   sx={{
@@ -446,11 +447,7 @@ export const SettingsPage = () => {
                       xs: 0.75,
                       md: 1.25,
                     },
-                    opacity: 1,
                     color: isSelected ? "primary.main" : "text.primary",
-                    "&.Mui-disabled": {
-                      opacity: 1,
-                    },
                   }}
                 >
                   <Box
@@ -539,7 +536,10 @@ export const SettingsPage = () => {
                       borderColor: isSelected ? "primary.main" : "divider",
                       borderRadius: "50%",
                       bgcolor: isSelected ? "primary.main" : "transparent",
-                      boxShadow: isSelected ? "inset 0 0 0 2px white" : "none",
+                      boxShadow: isSelected
+                        ? (theme) =>
+                            `inset 0 0 0 2px ${theme.vars.palette.background.paper}`
+                        : "none",
                     }}
                   />
                 </ButtonBase>
@@ -627,7 +627,7 @@ export const SettingsPage = () => {
               }}
             >
               <NotificationsNoneRounded
-                sx={{ flexShrink: 0, color: "app.brand.navy" }}
+                sx={{ flexShrink: 0, color: "app.brand.accent" }}
               />
 
               <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -674,7 +674,7 @@ export const SettingsPage = () => {
                 alignItems: "center",
               }}
             >
-              <GroupsOutlined sx={{ flexShrink: 0, color: "app.brand.navy" }} />
+              <GroupsOutlined sx={{ flexShrink: 0, color: "app.brand.accent" }} />
 
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography sx={{ fontSize: "0.86rem", fontWeight: 600 }}>
@@ -775,8 +775,7 @@ export const SettingsPage = () => {
                 width: "100%",
                 borderWidth: "1px",
                 borderStyle: "solid",
-                borderColor: (theme) =>
-                  alpha(theme.palette.app.brand.navy, 0.06),
+                borderColor: "app.border.card",
                 borderRadius: 2,
                 gap: 1.25,
                 px: {
@@ -786,7 +785,7 @@ export const SettingsPage = () => {
                 textAlign: "left",
               }}
             >
-              <LockOutlined sx={{ flexShrink: 0, color: "app.brand.navy" }} />
+              <LockOutlined sx={{ flexShrink: 0, color: "app.brand.accent" }} />
 
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography sx={{ fontSize: "0.86rem", fontWeight: 600 }}>
@@ -830,8 +829,7 @@ export const SettingsPage = () => {
                 },
                 borderWidth: "1px",
                 borderStyle: "solid",
-                borderColor: (theme) =>
-                  alpha(theme.palette.app.brand.navy, 0.06),
+                borderColor: "app.border.card",
                 borderRadius: 2,
                 gap: 1.25,
                 px: {
@@ -842,7 +840,7 @@ export const SettingsPage = () => {
               }}
             >
               <DevicesOutlined
-                sx={{ flexShrink: 0, color: "app.brand.navy" }}
+                sx={{ flexShrink: 0, color: "app.brand.accent" }}
               />
 
               <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -880,7 +878,8 @@ export const SettingsPage = () => {
                 mt: 0.75,
                 borderWidth: "1px",
                 borderStyle: "solid",
-                borderColor: (theme) => alpha(theme.palette.error.main, 0.08),
+                borderColor: (theme) =>
+                  theme.alpha(theme.vars.palette.error.main, 0.08),
                 borderRadius: 2,
                 bgcolor: "app.status.error.surface",
                 color: "error.main",
@@ -1042,7 +1041,7 @@ export const SettingsPage = () => {
               },
               borderWidth: "1px",
               borderStyle: "solid",
-              borderColor: (theme) => alpha(theme.palette.app.brand.navy, 0.06),
+              borderColor: "app.border.card",
               borderRadius: 2,
               gap: 1.25,
               px: {
@@ -1052,7 +1051,7 @@ export const SettingsPage = () => {
               textAlign: "left",
             }}
           >
-            <ChatOutlined sx={{ flexShrink: 0, color: "app.brand.navy" }} />
+            <ChatOutlined sx={{ flexShrink: 0, color: "app.brand.accent" }} />
 
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography sx={{ fontSize: "0.86rem", fontWeight: 600 }}>

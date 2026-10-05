@@ -82,7 +82,7 @@ const getFieldStyles = (isEditing: boolean) => ({
     },
 
     "&.Mui-focused fieldset": {
-      borderColor: "app.brand.navy",
+      borderColor: "app.brand.accent",
     },
 
     "&.Mui-error": {
@@ -101,7 +101,7 @@ const getFieldStyles = (isEditing: boolean) => ({
   },
 
   "& .MuiInputLabel-root.Mui-focused": {
-    color: "app.brand.navy",
+    color: "app.brand.accent",
   },
 
   "& .MuiInputLabel-root.Mui-error": {
@@ -516,7 +516,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
     <Box
       sx={{
         minHeight: {
-          xs: "calc(100dvh - 56px)",
+          xs: "calc(100dvh - 64px)",
           md: "auto",
         },
 
@@ -532,15 +532,9 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
           },
         }}
       >
-        {/* Закреплённый профиль */}
+        {/* Профиль */}
         <Box
           sx={{
-            position: "sticky",
-
-            top: 56,
-
-            zIndex: 1000,
-
             bgcolor: "background.default",
 
             px: 2,
@@ -598,7 +592,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     height: 30,
 
                     bgcolor: "app.brand.navySoft",
-                    color: "app.brand.navy",
+                    color: "app.brand.accent",
 
                     border: "2px solid",
                     borderColor: "background.paper",
@@ -670,7 +664,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
                   color: isEditing
                     ? "app.status.success.text"
-                    : "app.brand.navy",
+                    : "app.brand.accent",
 
                   bgcolor: isEditing
                     ? "app.status.success.surface"
@@ -937,7 +931,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
           <Typography
             variant="h4"
             sx={{
-              color: "app.brand.navy",
+              color: "app.brand.accent",
 
               fontWeight: 700,
               lineHeight: 1.2,
@@ -1025,7 +1019,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                     height: 34,
 
                     bgcolor: "app.brand.navySoft",
-                    color: "app.brand.navy",
+                    color: "app.brand.accent",
 
                     border: "2px solid",
                     borderColor: "background.paper",
@@ -1052,7 +1046,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
               sx={{
                 mt: 2.5,
 
-                color: "app.brand.navy",
+                color: "app.brand.accent",
 
                 fontWeight: 700,
                 lineHeight: 1.25,
@@ -1087,7 +1081,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                   py: 0.6,
 
                   bgcolor: "app.brand.navySoft",
-                  color: "app.brand.navy",
+                  color: "app.brand.accent",
 
                   borderRadius: 10,
 
@@ -1136,7 +1130,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: "app.brand.navy",
+                    color: "app.brand.accent",
 
                     fontWeight: 700,
                   }}
@@ -1208,7 +1202,7 @@ const ProfileContent = ({ user }: ProfileContentProps) => {
 
                     color: isEditing
                       ? "app.status.success.text"
-                      : "app.brand.navy",
+                      : "app.brand.accent",
 
                     bgcolor: isEditing
                       ? "app.status.success.surface"

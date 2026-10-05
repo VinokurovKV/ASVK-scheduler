@@ -195,7 +195,7 @@ export const MobileSchedule = ({
                       backgroundColor: eventTypeStyles[event.eventType].main,
                       boxShadow: selected
                         ? (theme) =>
-                            `0 0 0 1px ${theme.palette.app.overlay.whiteStrong}`
+                            `0 0 0 1px ${theme.vars.palette.app.overlay.whiteStrong}`
                         : "none",
                     }}
                   />

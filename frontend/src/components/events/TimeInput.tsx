@@ -123,6 +123,16 @@ export const TimeInput = ({
           borderRadius: 1,
           cursor: "text",
 
+          "& input": {
+            color: "text.primary",
+            caretColor: "primary.main",
+          },
+
+          "& input::placeholder": {
+            color: "text.secondary",
+            opacity: 1,
+          },
+
           "&:focus-within": {
             borderWidth: 2,
 

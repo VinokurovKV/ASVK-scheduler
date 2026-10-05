@@ -22,8 +22,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
@@ -252,7 +250,8 @@ const NextEventCard = ({ event, onOpenDetails }: NextEventCardProps) => {
                 overflow: "hidden",
                 flex: 1,
                 borderRadius: 3.5,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                bgcolor: (theme) =>
+                  theme.alpha(theme.vars.palette.primary.main, 0.1),
                 p: 1.5,
               }}
             >
@@ -453,7 +452,8 @@ const DaySummaryCard = ({ events }: { events: Event[] }) => {
               flex: 1,
               gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
               border: "1px solid",
-              borderColor: (theme) => alpha(theme.palette.divider, 0.1),
+              borderColor: (theme) =>
+                theme.alpha(theme.vars.palette.divider, 0.1),
               borderRadius: 2.5,
             }}
           >
@@ -469,7 +469,8 @@ const DaySummaryCard = ({ events }: { events: Event[] }) => {
                   p: 1.25,
                   borderRight: index % 2 === 0 ? "1px solid" : 0,
                   borderBottom: index < 2 ? "1px solid" : 0,
-                  borderColor: (theme) => alpha(theme.palette.divider, 0.1),
+                  borderColor: (theme) =>
+                    theme.alpha(theme.vars.palette.divider, 0.1),
                 }}
               >
                 <Box
@@ -716,7 +717,8 @@ const DayTimeline = ({
               onClick={() => changeDate(-1)}
               sx={{
                 borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                bgcolor: (theme) =>
+                  theme.alpha(theme.vars.palette.primary.main, 0.08),
               }}
             >
               <ChevronLeftRounded />
@@ -726,7 +728,8 @@ const DayTimeline = ({
               sx={{
                 minWidth: 82,
                 borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                bgcolor: (theme) =>
+                  theme.alpha(theme.vars.palette.primary.main, 0.08),
                 px: 1.5,
                 py: 0.75,
                 textAlign: "center",
@@ -743,7 +746,8 @@ const DayTimeline = ({
               onClick={() => changeDate(1)}
               sx={{
                 borderRadius: 2,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                bgcolor: (theme) =>
+                  theme.alpha(theme.vars.palette.primary.main, 0.08),
               }}
             >
               <ChevronRightRounded />
@@ -759,7 +763,8 @@ const DayTimeline = ({
             mt: 1.5,
             overflowY: "auto",
             pr: 0.5,
-            scrollbarColor: (theme) => `${theme.palette.divider} transparent`,
+            scrollbarColor: (theme) =>
+              `${theme.vars.palette.divider} transparent`,
           }}
         >
           <Box

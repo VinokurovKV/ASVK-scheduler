@@ -15,7 +15,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useState } from "react";
 
@@ -171,7 +170,7 @@ export const ChangePasswordPage = () => {
         elevation={0}
         sx={{
           border: "1px solid",
-          borderColor: (theme) => alpha(theme.palette.app.brand.navy, 0.06),
+          borderColor: "app.border.card",
           borderRadius: 3,
           maxWidth: { md: 700 },
           mx: { md: "auto" },
@@ -186,7 +185,7 @@ export const ChangePasswordPage = () => {
           sx={{ width: "100%", maxWidth: 600, mx: { md: "auto" } }}
         >
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-            <LockResetOutlined sx={{ color: "app.brand.navy" }} />
+            <LockResetOutlined sx={{ color: "app.brand.accent" }} />
             <Typography sx={{ fontSize: "1rem", fontWeight: 750 }}>
               Новый пароль
             </Typography>
@@ -292,9 +291,11 @@ export const ChangePasswordPage = () => {
             sx={{
               mt: 1,
               border: "1px solid",
-              borderColor: (theme) => alpha(theme.palette.primary.main, 0.12),
+              borderColor: (theme) =>
+                theme.alpha(theme.vars.palette.primary.main, 0.12),
               borderRadius: 3,
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.055),
+              bgcolor: (theme) =>
+                theme.alpha(theme.vars.palette.primary.main, 0.055),
               p: 2,
             }}
           >
@@ -375,9 +376,11 @@ export const ChangePasswordPage = () => {
           display: { xs: "block", md: "none" },
           mt: 1.5,
           border: "1px solid",
-          borderColor: (theme) => alpha(theme.palette.primary.main, 0.12),
+          borderColor: (theme) =>
+            theme.alpha(theme.vars.palette.primary.main, 0.12),
           borderRadius: 3,
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.055),
+          bgcolor: (theme) =>
+            theme.alpha(theme.vars.palette.primary.main, 0.055),
           p: { xs: 1.5, md: 2 },
         }}
       >

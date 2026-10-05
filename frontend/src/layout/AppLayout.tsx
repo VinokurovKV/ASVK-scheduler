@@ -40,7 +40,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { alpha, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -264,7 +264,7 @@ export const AppLayout = () => {
         minHeight: "100dvh",
 
         background: (theme) =>
-          `linear-gradient(to bottom, ${theme.palette.app.brand.navy} 0, ${theme.palette.app.brand.navy} 92px, ${theme.palette.background.default} 92px, ${theme.palette.background.default} 100%)`,
+          `linear-gradient(to bottom, ${theme.vars.palette.app.brand.navy} 0, ${theme.vars.palette.app.brand.navy} 92px, ${theme.vars.palette.background.default} 92px, ${theme.vars.palette.background.default} 100%)`,
       }}
     >
       {/* Мобильная верхняя панель */}
@@ -382,7 +382,7 @@ export const AppLayout = () => {
               height: 34,
 
               bgcolor: "app.brand.navySoft",
-              color: "app.brand.navy",
+              color: "app.brand.accent",
 
               fontSize: "0.82rem",
               fontWeight: 700,
@@ -815,7 +815,7 @@ export const AppLayout = () => {
           <CalendarToday
             sx={{
               fontSize: 22,
-              color: "app.brand.navySoft",
+              color: "app.navigation.icon",
             }}
           />
 
@@ -876,7 +876,7 @@ export const AppLayout = () => {
                 height: 40,
 
                 bgcolor: "app.brand.navySoft",
-                color: "app.brand.navy",
+                color: "app.brand.accent",
 
                 fontSize: "0.9rem",
                 fontWeight: 700,
@@ -1275,7 +1275,8 @@ export const AppLayout = () => {
             variant="body2"
             sx={{
               mt: 0.5,
-              color: (theme) => alpha(theme.palette.text.primary, 0.35),
+              color: (theme) =>
+                theme.alpha(theme.vars.palette.text.primary, 0.35),
               fontFamily: (theme) => theme.typography.body1.fontFamily,
               fontSize: "0.75rem",
               textAlign: "center",
@@ -1336,7 +1337,7 @@ export const AppLayout = () => {
             md: `calc(100dvh - ${DESKTOP_HEADER_HEIGHT}px)`,
           },
 
-          overflow: "hidden",
+          overflow: isProfilePage ? "visible" : "hidden",
 
           px: {
             xs: isProfilePage ? 0 : 2,

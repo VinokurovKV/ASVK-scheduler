@@ -19,7 +19,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useRef, useState } from "react";
 
@@ -185,7 +184,7 @@ const SupportForm = ({ defaultEmail }: { defaultEmail: string }) => {
         mx: "auto",
           display: "flex",
           border: "1px solid",
-          borderColor: (theme) => alpha(theme.palette.app.brand.navy, 0.06),
+          borderColor: "app.border.card",
           borderRadius: 3,
         p: { xs: 1.5, md: 3 },
       }}
@@ -328,7 +327,10 @@ const SupportForm = ({ defaultEmail }: { defaultEmail: string }) => {
                 borderRadius: 2.5,
                 bgcolor: selectedFile
                   ? (theme) =>
-                      alpha(theme.palette.app.status.success.text, 0.045)
+                      theme.alpha(
+                        theme.vars.palette.app.status.success.text,
+                        0.045,
+                      )
                   : "transparent",
                 gap: 1.5,
                 px: 1.25,
@@ -354,7 +356,8 @@ const SupportForm = ({ defaultEmail }: { defaultEmail: string }) => {
                   flexShrink: 0,
                   placeItems: "center",
                   borderRadius: 2.5,
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  bgcolor: (theme) =>
+                    theme.alpha(theme.vars.palette.primary.main, 0.08),
                   color: selectedFile
                     ? "app.status.success.text"
                     : "primary.main",
@@ -429,7 +432,8 @@ const SupportForm = ({ defaultEmail }: { defaultEmail: string }) => {
             sx={{
               alignItems: "center",
               borderRadius: 2.5,
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.065),
+              bgcolor: (theme) =>
+                theme.alpha(theme.vars.palette.primary.main, 0.065),
               color: "primary.main",
               px: 1.25,
               py: 1.15,

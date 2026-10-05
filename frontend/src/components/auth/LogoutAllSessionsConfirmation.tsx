@@ -15,7 +15,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { alpha, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -132,7 +132,8 @@ export const LogoutAllSessionsConfirmation = ({
             flexShrink: 0,
             placeItems: "center",
             borderRadius: "50%",
-            bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
+            bgcolor: (theme) =>
+              theme.alpha(theme.vars.palette.error.main, 0.12),
           }}
         >
           <PriorityHighRounded sx={{ fontSize: 19 }} />
