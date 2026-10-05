@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
@@ -439,20 +440,61 @@ export class AuthService {
       },
     });
 
-    return sessions.map((session) => ({
-      id: session.id,
-      ...getDeviceDetails(session.userAgent),
-      current: session.tokenHash === currentTokenHash,
-      online: session.lastActiveAt.getTime() >= onlineThreshold,
-      lastActiveAt: session.lastActiveAt,
-      createdAt: session.createdAt,
-    }));
+    return sessions
+      .map((session) => ({
+        id: session.id,
+        ...getDeviceDetails(session.userAgent),
+        current: session.tokenHash === currentTokenHash,
+        online: session.lastActiveAt.getTime() >= onlineThreshold,
+        lastActiveAt: session.lastActiveAt,
+        createdAt: session.createdAt,
+      }))
+      .sort((firstSession, secondSession) =>
+        firstSession.current === secondSession.current
+          ? 0
+          : firstSession.current
+            ? -1
+            : 1,
+      );
   }
 
   async deleteSession(token: string) {
     await this.prisma.authSession.deleteMany({
       where: {
         tokenHash: hashSessionToken(token),
+      },
+    });
+  }
+
+  async deleteUserSession(
+    userId: number,
+    sessionId: number,
+    currentToken: string,
+  ) {
+    const session = await this.prisma.authSession.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+      select: {
+        tokenHash: true,
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    if (session.tokenHash === hashSessionToken(currentToken)) {
+      throw new BadRequestException(
+        'Current session must be terminated with logout',
+      );
+    }
+
+    await this.prisma.authSession.deleteMany({
+      where: {
+        id: sessionId,
+        userId,
       },
     });
   }

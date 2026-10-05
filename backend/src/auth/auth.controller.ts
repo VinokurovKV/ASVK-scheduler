@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -112,6 +115,20 @@ export class AuthController {
   sessions(@Req() request: AuthenticatedRequest) {
     return this.authService.getSessions(
       request.user.id,
+      request.sessionToken,
+    );
+  }
+
+  @Delete('sessions/:sessionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(SessionAuthGuard)
+  async deleteSession(
+    @Req() request: AuthenticatedRequest,
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+  ) {
+    await this.authService.deleteUserSession(
+      request.user.id,
+      sessionId,
       request.sessionToken,
     );
   }
