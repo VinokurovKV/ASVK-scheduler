@@ -6,19 +6,22 @@ import {
   SmartphoneOutlined,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
   Paper,
+  Snackbar,
   Stack,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-import { getActiveSessions } from "../api/auth";
+import { getActiveSessions, logoutSession } from "../api/auth";
 import { LogoutAllSessionsConfirmation } from "../components/auth/LogoutAllSessionsConfirmation";
+import { LogoutSessionConfirmation } from "../components/auth/LogoutSessionConfirmation";
 import type { AuthSessionInfo, SessionDeviceType } from "../types/Auth";
 
 const ACTIVE_SESSIONS_QUERY_KEY = ["auth", "sessions"] as const;
@@ -88,7 +91,17 @@ const formatLastActive = (value: string, online: boolean) => {
   return formattedDate;
 };
 
-const SessionCard = ({ session }: { session: AuthSessionInfo }) => {
+interface SessionCardProps {
+  session: AuthSessionInfo;
+  isLogoutPending: boolean;
+  onLogout: (session: AuthSessionInfo) => void;
+}
+
+const SessionCard = ({
+  session,
+  isLogoutPending,
+  onLogout,
+}: SessionCardProps) => {
   const device = getDevicePresentation(session);
 
   return (
@@ -163,33 +176,83 @@ const SessionCard = ({ session }: { session: AuthSessionInfo }) => {
         </Typography>
       </Box>
 
-      <Box
-        sx={{
-          flexShrink: 0,
-          borderRadius: 2,
-          bgcolor: session.current
-            ? (theme) => theme.alpha(theme.vars.palette.primary.main, 0.08)
-            : "app.status.error.surface",
-          color: session.current ? "primary.main" : "error.main",
-          fontSize: "0.72rem",
-          fontWeight: 700,
-          lineHeight: 1,
-          px: 1.1,
-          py: 0.8,
-        }}
-      >
-        {session.current ? "Текущее" : "Выйти"}
-      </Box>
+      {session.current ? (
+        <Box
+          sx={{
+            flexShrink: 0,
+            borderRadius: 2,
+            bgcolor: (theme) =>
+              theme.alpha(theme.vars.palette.primary.main, 0.08),
+            color: "primary.main",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            lineHeight: 1,
+            px: 1.1,
+            py: 0.8,
+          }}
+        >
+          Текущее
+        </Box>
+      ) : (
+        <Button
+          color="error"
+          disabled={isLogoutPending}
+          onClick={() => onLogout(session)}
+          aria-label={`Завершить сессию на устройстве ${device.deviceName}`}
+          sx={{
+            minWidth: 0,
+            minHeight: 34,
+            flexShrink: 0,
+            borderRadius: 2,
+            bgcolor: "app.status.error.surface",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            px: 1.1,
+            textTransform: "none",
+            "&:hover": { bgcolor: "app.status.error.surface" },
+          }}
+        >
+          Выйти
+        </Button>
+      )}
     </Paper>
   );
 };
 
 export const ActiveSessionsPage = () => {
+  const queryClient = useQueryClient();
   const [isLogoutAllConfirmationOpen, setIsLogoutAllConfirmationOpen] =
     useState(false);
+  const [selectedSession, setSelectedSession] =
+    useState<AuthSessionInfo | null>(null);
+  const [toast, setToast] = useState<{
+    severity: "success" | "error";
+    message: string;
+  } | null>(null);
   const sessionsQuery = useQuery({
     queryKey: ACTIVE_SESSIONS_QUERY_KEY,
     queryFn: getActiveSessions,
+  });
+  const logoutSessionMutation = useMutation({
+    mutationFn: (session: AuthSessionInfo) => logoutSession(session.id),
+    onSuccess: (_, session) => {
+      queryClient.setQueryData<AuthSessionInfo[]>(
+        ACTIVE_SESSIONS_QUERY_KEY,
+        (sessions) =>
+          sessions?.filter((item) => item.id !== session.id) ?? [],
+      );
+      setSelectedSession(null);
+      setToast({
+        severity: "success",
+        message: `Сессия на устройстве «${getDevicePresentation(session).deviceName}» завершена`,
+      });
+    },
+    onError: () => {
+      setToast({
+        severity: "error",
+        message: "Не удалось завершить выбранную сессию",
+      });
+    },
   });
 
   return (
@@ -238,7 +301,15 @@ export const ActiveSessionsPage = () => {
       ) : (
         <Stack spacing={1.25}>
           {sessionsQuery.data.map((session) => (
-            <SessionCard key={session.id} session={session} />
+            <SessionCard
+              key={session.id}
+              session={session}
+              isLogoutPending={
+                logoutSessionMutation.isPending &&
+                logoutSessionMutation.variables?.id === session.id
+              }
+              onLogout={setSelectedSession}
+            />
           ))}
         </Stack>
       )}
@@ -349,6 +420,38 @@ export const ActiveSessionsPage = () => {
         open={isLogoutAllConfirmationOpen}
         onClose={() => setIsLogoutAllConfirmationOpen(false)}
       />
+
+      <LogoutSessionConfirmation
+        open={selectedSession !== null}
+        deviceName={
+          selectedSession
+            ? getDevicePresentation(selectedSession).deviceName
+            : ""
+        }
+        isPending={logoutSessionMutation.isPending}
+        onClose={() => setSelectedSession(null)}
+        onConfirm={() => {
+          if (selectedSession) {
+            logoutSessionMutation.mutate(selectedSession);
+          }
+        }}
+      />
+
+      <Snackbar
+        open={toast !== null}
+        autoHideDuration={3000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={toast?.severity ?? "success"}
+          variant="filled"
+          onClose={() => setToast(null)}
+          sx={{ width: "100%", boxShadow: (theme) => theme.appShadows.toast }}
+        >
+          {toast?.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

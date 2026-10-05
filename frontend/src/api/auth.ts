@@ -165,6 +165,16 @@ export const getActiveSessions = async (): Promise<AuthSessionInfo[]> => {
   return response.json();
 };
 
+export const logoutSession = async (sessionId: number) => {
+  const response = await apiFetch(`/auth/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw await getApiError(response);
+  }
+};
+
 export const changePassword = async (input: ChangePasswordInput) => {
   const response = await apiFetch("/auth/password", {
     method: "PATCH",
