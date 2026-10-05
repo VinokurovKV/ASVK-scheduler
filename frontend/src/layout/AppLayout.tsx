@@ -44,7 +44,7 @@ import { useTheme } from "@mui/material/styles";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -98,6 +98,10 @@ export const AppLayout = () => {
   const queryClient = useQueryClient();
   const theme = useTheme();
   const isMobileViewport = useMediaQuery(theme.breakpoints.down("md"));
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCollapseTooltipOpen, setIsCollapseTooltipOpen] = useState(false);
