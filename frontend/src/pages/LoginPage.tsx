@@ -160,7 +160,10 @@ export const LoginPage = () => {
             xs: "stretch",
             sm: "center",
           },
-          bgcolor: "background.paper",
+          bgcolor: {
+            xs: "background.default",
+            sm: "background.paper",
+          },
           border: {
             xs: 0,
             sm: "1px solid",

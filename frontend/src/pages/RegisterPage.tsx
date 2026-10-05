@@ -192,7 +192,10 @@ export const RegisterPage = () => {
           maxWidth: 720,
           mx: "auto",
 
-          bgcolor: "background.paper",
+          bgcolor: {
+            xs: "background.default",
+            sm: "background.paper",
+          },
 
           border: {
             xs: 0,
