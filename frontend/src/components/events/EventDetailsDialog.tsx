@@ -45,6 +45,7 @@ interface EventDetailsDialogProps {
   event: Event;
   onClose: () => void;
   onEventUpdated: (event: Event) => void;
+  initialAction?: "details" | "edit" | "delete";
 }
 
 const repeatLabels: Record<RepeatInterval, string> = {
@@ -100,12 +101,17 @@ export const EventDetailsDialog = ({
   event,
   onClose,
   onEventUpdated,
+  initialAction = "details",
 }: EventDetailsDialogProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const online = event.format === "ONLINE";
-  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(
+    initialAction === "delete",
+  );
+  const [editDialogOpen, setEditDialogOpen] = useState(
+    initialAction === "edit",
+  );
   const queryClient = useQueryClient();
 
   const deleteEventMutation = useMutation({

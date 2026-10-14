@@ -1,11 +1,8 @@
 import {
-  AccessTime,
+  Add,
   Close,
-  LocationOn,
-  Repeat,
+  KeyboardArrowDown,
   Search,
-  Tune,
-  Videocam,
 } from "@mui/icons-material";
 
 import {
@@ -13,96 +10,107 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   CardContent,
-  Chip,
+  Checkbox,
   CircularProgress,
   Drawer,
+  Fab,
+  FormControlLabel,
+  FormGroup,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
   Stack,
+  Switch,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 
+import { getCurrentUser } from "../api/auth";
+import { AUTH_QUERY_KEY } from "../api/authQuery";
 import { getEvents } from "../api/events";
+import { CreateEventDialog } from "../components/events/CreateEventDialog";
+import { DesktopEventRow } from "../components/events/DesktopEventRow";
 import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
-import {
-  eventTypeLabels,
-  eventTypeLabelTextColor,
-  eventTypeStyles,
-} from "../constants/events";
-import type { Event, EventFormat, RepeatInterval } from "../types/Event";
+import { MobileEventCard } from "../components/events/MobileEventCard";
+import { MobileEventFilterMenu } from "../components/events/MobileEventFilterMenu";
+import { eventTypeLabels } from "../constants/events";
+import { getNextEventOccurrenceForEvent } from "./schedule/scheduleUtils";
+import type {
+  Event,
+  EventFormat,
+  EventType,
+  RepeatInterval,
+} from "../types/Event";
 
-type FormatFilter = "ALL" | EventFormat;
+type FormatFilter = EventFormat;
 type RepeatFilter = "ALL" | RepeatInterval;
+type TypeFilter = EventType;
+type DateFilter = "UPCOMING" | "PAST";
+type MobileFilterMenu = "FORMAT" | "TYPE" | "DATE";
 
-const repeatLabels: Record<RepeatInterval, string> = {
-  NONE: "Не повторяется",
-  WEEK: "Каждую неделю",
-  TWO_WEEKS: "Каждые 2 недели",
-  MONTH: "Каждый месяц",
-};
+const formatOptions: Array<{ value: FormatFilter; label: string }> = [
+  { value: "OFFLINE", label: "Очно" },
+  { value: "ONLINE", label: "Онлайн" },
+];
 
-const formatDate = (date: string) =>
-  new Intl.DateTimeFormat("ru-RU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date(date));
+const typeOptions: Array<{ value: TypeFilter; label: string }> = [
+  { value: "LECTURE", label: "Лекция" },
+  { value: "SEMINAR", label: "Семинар" },
+  { value: "WORK_MEETING", label: "Совещание" },
+  { value: "MEETING", label: "Встреча" },
+];
 
-const formatTime = (date: string) =>
-  new Intl.DateTimeFormat("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
+const dateOptions: Array<{ value: DateFilter; label: string }> = [
+  { value: "UPCOMING", label: "Предстоящие" },
+  { value: "PAST", label: "Прошедшие" },
+];
 
-const EventPlace = ({ event }: { event: Event }) => {
-  const online = event.format === "ONLINE";
-
-  return (
-    <Stack
-      direction="row"
-      spacing={0.75}
-      sx={{
-        alignItems: "center",
-        minWidth: 0,
-      }}
-    >
-      {online ? (
-        <Videocam fontSize="small" color="action" />
-      ) : (
-        <LocationOn fontSize="small" color="action" />
-      )}
-
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {online ? "Онлайн" : `Аудитория ${event.room}`}
-      </Typography>
-    </Stack>
-  );
+const mobileFilterButtonStyles = {
+  minWidth: "max-content",
+  minHeight: 36,
+  px: 1.5,
+  borderColor: "app.border.card",
+  borderRadius: 10,
+  color: "text.primary",
+  fontSize: "0.75rem",
+  fontWeight: 650,
+  textTransform: "none",
+  whiteSpace: "nowrap",
+  "& .MuiButton-endIcon": { ml: 0.35 },
+  "@media (max-width: 399.95px)": {
+    px: 1.25,
+    "& .MuiButton-endIcon": { display: "none" },
+  },
 };
 
 export const EventsPage = () => {
+  const [currentTime] = useState(() => Date.now());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEventAction, setSelectedEventAction] = useState<
+    "details" | "edit" | "delete"
+  >("details");
+  const [createEventOpen, setCreateEventOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [formatFilter, setFormatFilter] = useState<FormatFilter>("ALL");
+  const [mobileFilterMenu, setMobileFilterMenu] =
+    useState<MobileFilterMenu | null>(null);
+  const [mobileFilterAnchor, setMobileFilterAnchor] =
+    useState<HTMLElement | null>(null);
+  const [formatFilters, setFormatFilters] = useState<FormatFilter[]>([]);
+  const [typeFilters, setTypeFilters] = useState<TypeFilter[]>([]);
+  const [dateFilters, setDateFilters] = useState<DateFilter[]>([]);
   const [repeatFilter, setRepeatFilter] = useState<RepeatFilter>("ALL");
+  const [onlyMine, setOnlyMine] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: AUTH_QUERY_KEY,
+    queryFn: getCurrentUser,
+  });
 
   const {
     data: events = [],
@@ -113,16 +121,42 @@ export const EventsPage = () => {
     queryFn: getEvents,
   });
 
-  const sortedEvents = [...events].sort(
-    (first, second) =>
-      new Date(first.startsAt).getTime() -
-      new Date(second.startsAt).getTime(),
+  const eventsWithNearestOccurrences = events.map((event) => {
+    if (event.repeatInterval === "NONE") {
+      return event;
+    }
+
+    return (
+      getNextEventOccurrenceForEvent(event, new Date(currentTime)) ?? event
+    );
+  });
+
+  const sortedEvents = [...eventsWithNearestOccurrences].sort(
+    (first, second) => {
+      const firstStart = new Date(first.startsAt).getTime();
+      const secondStart = new Date(second.startsAt).getTime();
+      const firstIsCurrentOrUpcoming =
+        new Date(first.endsAt).getTime() >= currentTime;
+      const secondIsCurrentOrUpcoming =
+        new Date(second.endsAt).getTime() >= currentTime;
+
+      if (firstIsCurrentOrUpcoming !== secondIsCurrentOrUpcoming) {
+        return firstIsCurrentOrUpcoming ? -1 : 1;
+      }
+
+      return firstIsCurrentOrUpcoming
+        ? firstStart - secondStart
+        : secondStart - firstStart;
+    },
   );
 
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase("ru-RU");
   const activeFiltersCount =
-    Number(formatFilter !== "ALL") + Number(repeatFilter !== "ALL");
-
+    Number(formatFilters.length > 0) +
+    Number(typeFilters.length > 0) +
+    Number(dateFilters.length > 0) +
+    Number(repeatFilter !== "ALL") +
+    Number(onlyMine);
   const filteredEvents = sortedEvents.filter((event) => {
     const searchableText = [
       event.title,
@@ -137,21 +171,90 @@ export const EventsPage = () => {
     const matchesSearch =
       !normalizedQuery || searchableText.includes(normalizedQuery);
     const matchesFormat =
-      formatFilter === "ALL" || event.format === formatFilter;
+      formatFilters.length === 0 || formatFilters.includes(event.format);
+    const matchesType =
+      typeFilters.length === 0 || typeFilters.includes(event.eventType);
+    const eventEndTime = new Date(event.endsAt).getTime();
+    const matchesDate =
+      dateFilters.length === 0 ||
+      (dateFilters.includes("UPCOMING") && eventEndTime >= currentTime) ||
+      (dateFilters.includes("PAST") && eventEndTime < currentTime);
     const matchesRepeat =
       repeatFilter === "ALL" || event.repeatInterval === repeatFilter;
+    const matchesOwner = !onlyMine || event.creatorId === currentUser?.id;
 
-    return matchesSearch && matchesFormat && matchesRepeat;
+    return (
+      matchesSearch &&
+      matchesFormat &&
+      matchesType &&
+      matchesDate &&
+      matchesRepeat &&
+      matchesOwner
+    );
   });
 
   const resetFilters = () => {
-    setFormatFilter("ALL");
+    setFormatFilters([]);
+    setTypeFilters([]);
+    setDateFilters([]);
     setRepeatFilter("ALL");
+    setOnlyMine(false);
+  };
+
+  const formatFilterLabel =
+    formatFilters.length === 1
+      ? formatOptions.find(({ value }) => value === formatFilters[0])?.label
+      : formatFilters.length > 1
+        ? `Формат (${formatFilters.length})`
+        : "Формат";
+  const typeFilterLabel =
+    typeFilters.length === 1
+      ? eventTypeLabels[typeFilters[0]]
+      : typeFilters.length > 1
+        ? `Тип (${typeFilters.length})`
+        : "Тип";
+  const dateFilterLabel =
+    dateFilters.length === 1
+      ? dateOptions.find(({ value }) => value === dateFilters[0])?.label
+      : dateFilters.length > 1
+        ? `Дата (${dateFilters.length})`
+        : "Дата";
+
+  const openMobileFilterMenu = (
+    menu: MobileFilterMenu,
+    anchor: HTMLElement,
+  ) => {
+    setMobileFilterMenu(menu);
+    setMobileFilterAnchor(anchor);
+  };
+
+  const closeMobileFilterMenu = () => {
+    setMobileFilterMenu(null);
+    setMobileFilterAnchor(null);
+  };
+
+  const toggleFilterValue = <Value extends string>(
+    value: Value,
+    setValues: Dispatch<SetStateAction<Value[]>>,
+  ) => {
+    setValues((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
+  };
+
+  const openEvent = (
+    event: Event,
+    action: "details" | "edit" | "delete" = "details",
+  ) => {
+    setSelectedEventAction(action);
+    setSelectedEvent(event);
   };
 
   return (
     <Stack
-      spacing={3}
+      spacing={{ xs: 1.5, lg: 3 }}
       sx={{
         width: "100%",
         maxWidth: 1200,
@@ -159,16 +262,9 @@ export const EventsPage = () => {
       }}
     >
       <Stack
-        spacing={2}
+        direction="row"
         sx={{
-          flexDirection: {
-            xs: "column",
-            md: "row",
-          },
-          alignItems: {
-            xs: "stretch",
-            md: "flex-end",
-          },
+          alignItems: "center",
           justifyContent: "space-between",
         }}
       >
@@ -186,74 +282,154 @@ export const EventsPage = () => {
             События
           </Typography>
 
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography
+            color="text.secondary"
+            sx={{ display: { xs: "none", lg: "block" }, mt: 0.5 }}
+          >
             Все события вашего расписания
           </Typography>
         </Box>
 
-        {!isLoading && !isError && sortedEvents.length > 0 && (
-          <Stack
-            spacing={1}
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setCreateEventOpen(true)}
+          sx={{
+            display: { xs: "none", lg: "inline-flex" },
+            flexShrink: 0,
+          }}
+        >
+          Создать событие
+        </Button>
+      </Stack>
+
+      {!isLoading && !isError && sortedEvents.length > 0 && (
+        <TextField
+          type="text"
+          placeholder="Поиск по названию, аудитории или описанию"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          autoComplete="off"
+          fullWidth
+          size="small"
+          slotProps={{
+            htmlInput: {
+              inputMode: "search",
+              enterKeyHint: "search",
+            },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    aria-label="Очистить поиск"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <Close />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
+            },
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "background.paper",
+            },
+          }}
+        />
+      )}
+
+      {!isLoading && !isError && sortedEvents.length > 0 && (
+        <Box
+          sx={{
+            display: { xs: "block", lg: "none" },
+            mx: -0.5,
+            px: 0.5,
+            pb: 0.25,
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
+          <Box
             sx={{
-              width: {
-                xs: "100%",
-                md: 420,
-              },
-              flexShrink: 0,
+              display: "flex",
+              width: "max-content",
+              minWidth: "100%",
+              justifyContent: "space-between",
+              gap: 0.75,
             }}
           >
-            <TextField
-              type="text"
-              label="Поиск событий"
-              placeholder="Название, описание или место"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              autoComplete="off"
-              fullWidth
-              slotProps={{
-                htmlInput: {
-                  inputMode: "search",
-                  enterKeyHint: "search",
-                },
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchQuery ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        edge="end"
-                        aria-label="Очистить поиск"
-                        onClick={() => setSearchQuery("")}
-                      >
-                        <Close />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : undefined,
-                },
-              }}
-            />
-
             <Button
               variant={activeFiltersCount > 0 ? "contained" : "outlined"}
-              startIcon={<Tune />}
-              onClick={() => setFiltersOpen(true)}
-              sx={{
-                display: {
-                  xs: "inline-flex",
-                  lg: "none",
-                },
+              endIcon={<KeyboardArrowDown />}
+              onClick={() => {
+                closeMobileFilterMenu();
+                setFiltersOpen(true);
               }}
+              sx={mobileFilterButtonStyles}
             >
-              {activeFiltersCount > 0
-                ? `Фильтры (${activeFiltersCount})`
-                : "Фильтры"}
+              {activeFiltersCount > 0 ? `Все (${activeFiltersCount})` : "Все"}
             </Button>
-          </Stack>
-        )}
-      </Stack>
+            <Button
+              variant={formatFilters.length === 0 ? "outlined" : "contained"}
+              endIcon={<KeyboardArrowDown />}
+              onClick={(event) =>
+                openMobileFilterMenu("FORMAT", event.currentTarget)
+              }
+              sx={mobileFilterButtonStyles}
+            >
+              {formatFilterLabel}
+            </Button>
+            <Button
+              variant={typeFilters.length === 0 ? "outlined" : "contained"}
+              endIcon={<KeyboardArrowDown />}
+              onClick={(event) =>
+                openMobileFilterMenu("TYPE", event.currentTarget)
+              }
+              sx={mobileFilterButtonStyles}
+            >
+              {typeFilterLabel}
+            </Button>
+            <Button
+              variant={dateFilters.length === 0 ? "outlined" : "contained"}
+              endIcon={<KeyboardArrowDown />}
+              onClick={(event) =>
+                openMobileFilterMenu("DATE", event.currentTarget)
+              }
+              sx={mobileFilterButtonStyles}
+            >
+              {dateFilterLabel}
+            </Button>
+
+            {activeFiltersCount > 0 && (
+              <IconButton
+                aria-label="Сбросить все фильтры"
+                onClick={() => {
+                  closeMobileFilterMenu();
+                  resetFilters();
+                }}
+                sx={{
+                  width: 36,
+                  height: 36,
+                  flexShrink: 0,
+                  border: "1px solid",
+                  borderColor: "app.border.card",
+                  bgcolor: "background.paper",
+                  color: "text.secondary",
+                }}
+              >
+                <Close sx={{ fontSize: 19 }} />
+              </IconButton>
+            )}
+          </Box>
+        </Box>
+      )}
 
       {!isLoading && !isError && sortedEvents.length > 0 && (
         <Paper
@@ -264,59 +440,84 @@ export const EventsPage = () => {
               lg: "flex",
             },
             alignItems: "center",
-            gap: 1.5,
-            p: 1.5,
+            gap: 1,
+            p: 1.25,
+            borderColor: "app.border.card",
             borderRadius: 3,
           }}
         >
-          <Tune color="action" />
-
-          <TextField
-            select
-            label="Формат"
-            value={formatFilter}
-            onChange={(event) =>
-              setFormatFilter(event.target.value as FormatFilter)
-            }
-            size="small"
-            sx={{ width: 180 }}
-          >
-            <MenuItem value="ALL">Все форматы</MenuItem>
-            <MenuItem value="OFFLINE">Очно</MenuItem>
-            <MenuItem value="ONLINE">Онлайн</MenuItem>
-          </TextField>
-
-          <TextField
-            select
-            label="Повторение"
-            value={repeatFilter}
-            onChange={(event) =>
-              setRepeatFilter(event.target.value as RepeatFilter)
-            }
-            size="small"
-            sx={{ width: 220 }}
-          >
-            <MenuItem value="ALL">Любое повторение</MenuItem>
-            <MenuItem value="NONE">Не повторяется</MenuItem>
-            <MenuItem value="WEEK">Раз в неделю</MenuItem>
-            <MenuItem value="TWO_WEEKS">Раз в две недели</MenuItem>
-            <MenuItem value="MONTH">Раз в месяц</MenuItem>
-          </TextField>
-
           <Button
-            onClick={resetFilters}
-            disabled={activeFiltersCount === 0}
+            variant={activeFiltersCount > 0 ? "contained" : "outlined"}
+            endIcon={<KeyboardArrowDown />}
+            onClick={() => {
+              closeMobileFilterMenu();
+              setFiltersOpen(true);
+            }}
+            sx={mobileFilterButtonStyles}
           >
-            Сбросить
+            {activeFiltersCount > 0 ? `Все (${activeFiltersCount})` : "Все"}
+          </Button>
+          <Button
+            variant={formatFilters.length === 0 ? "outlined" : "contained"}
+            endIcon={<KeyboardArrowDown />}
+            onClick={(event) =>
+              openMobileFilterMenu("FORMAT", event.currentTarget)
+            }
+            sx={mobileFilterButtonStyles}
+          >
+            {formatFilterLabel}
+          </Button>
+          <Button
+            variant={typeFilters.length === 0 ? "outlined" : "contained"}
+            endIcon={<KeyboardArrowDown />}
+            onClick={(event) =>
+              openMobileFilterMenu("TYPE", event.currentTarget)
+            }
+            sx={mobileFilterButtonStyles}
+          >
+            {typeFilterLabel}
+          </Button>
+          <Button
+            variant={dateFilters.length === 0 ? "outlined" : "contained"}
+            endIcon={<KeyboardArrowDown />}
+            onClick={(event) =>
+              openMobileFilterMenu("DATE", event.currentTarget)
+            }
+            sx={mobileFilterButtonStyles}
+          >
+            {dateFilterLabel}
           </Button>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ ml: "auto" }}
-          >
-            Найдено: {filteredEvents.length}
-          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={onlyMine}
+                onChange={(event) => setOnlyMine(event.target.checked)}
+              />
+            }
+            label="Только мои"
+            sx={{
+              ml: 0.5,
+              mr: 0,
+              "& .MuiFormControlLabel-label": {
+                fontSize: "0.8rem",
+                whiteSpace: "nowrap",
+              },
+            }}
+          />
+
+          {activeFiltersCount > 0 && (
+            <IconButton
+              aria-label="Сбросить все фильтры"
+              onClick={resetFilters}
+              size="small"
+              sx={{ color: "text.secondary" }}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          )}
+
         </Paper>
       )}
 
@@ -376,121 +577,116 @@ export const EventsPage = () => {
         <Box
           component="ul"
           sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "minmax(0, 1fr)",
-              md: "repeat(2, minmax(0, 1fr))",
-              xl: "repeat(3, minmax(0, 1fr))",
-            },
-            gap: 2,
+            display: { xs: "grid", lg: "none" },
+            gap: 1,
             p: 0,
             m: 0,
             listStyle: "none",
           }}
         >
           {filteredEvents.map((event) => (
-            <Card
-              component="li"
+            <MobileEventCard
               key={event.id}
-              variant="outlined"
-              sx={{
-                borderRadius: 3,
-                borderLeftWidth: 4,
-                borderLeftColor: eventTypeStyles[event.eventType].main,
-                backgroundColor: eventTypeStyles[event.eventType].surface,
-              }}
-            >
-              <CardActionArea
-                onClick={() => setSelectedEvent(event)}
-                aria-label={`Открыть событие «${event.title}»`}
-                sx={{ height: "100%" }}
-              >
-                <CardContent>
-                  <Stack spacing={1.5}>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{
-                        alignItems: "flex-start",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {event.title}
-                        </Typography>
-
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mt: 0.25,
-                            textTransform: "capitalize",
-                          }}
-                        >
-                          {formatDate(event.startsAt)}
-                        </Typography>
-                      </Box>
-
-                      <Chip
-                        label={eventTypeLabels[event.eventType]}
-                        size="small"
-                        sx={{
-                          backgroundColor: eventTypeStyles[event.eventType].main,
-                          color: eventTypeLabelTextColor,
-                          fontWeight: 600,
-                        }}
-                      />
-                    </Stack>
-
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      sx={{ alignItems: "center" }}
-                    >
-                      <AccessTime fontSize="small" color="action" />
-
-                      <Typography variant="body2" color="text.secondary">
-                        {formatTime(event.startsAt)}
-                        {"–"}
-                        {formatTime(event.endsAt)}
-                      </Typography>
-                    </Stack>
-
-                    <EventPlace event={event} />
-
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      sx={{ alignItems: "center" }}
-                    >
-                      <Repeat fontSize="small" color="action" />
-
-                      <Typography variant="body2" color="text.secondary">
-                        {repeatLabels[event.repeatInterval]}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+              event={event}
+              onOpen={() => openEvent(event)}
+            />
           ))}
         </Box>
       )}
 
+      {!isLoading && !isError && filteredEvents.length > 0 && (
+        <Paper
+          variant="outlined"
+          sx={{
+            display: { xs: "none", lg: "block" },
+            p: 1.5,
+            m: 0,
+            borderColor: "app.border.card",
+            borderRadius: 3,
+          }}
+        >
+          <Box
+            component="ul"
+            sx={{ display: "grid", gap: 1, p: 0, m: 0, listStyle: "none" }}
+          >
+            {filteredEvents.map((event) => (
+              <DesktopEventRow
+                key={event.id}
+                event={event}
+                onOpen={() => openEvent(event)}
+                onEdit={() => openEvent(event, "edit")}
+                onDelete={() => openEvent(event, "delete")}
+              />
+            ))}
+          </Box>
+        </Paper>
+      )}
+
       {selectedEvent && (
         <EventDetailsDialog
+          key={`${selectedEvent.id}-${selectedEventAction}`}
           event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
+          initialAction={selectedEventAction}
+          onClose={() => {
+            setSelectedEvent(null);
+            setSelectedEventAction("details");
+          }}
           onEventUpdated={setSelectedEvent}
         />
       )}
+
+      <Fab
+        color="primary"
+        aria-label="Создать событие"
+        onClick={() => setCreateEventOpen(true)}
+        sx={{
+          display: { xs: "flex", lg: "none" },
+          position: "fixed",
+          right: 16,
+          bottom: { xs: 80, md: 24 },
+          zIndex: 900,
+        }}
+      >
+        <Add />
+      </Fab>
+
+      {createEventOpen && (
+        <CreateEventDialog
+          open
+          initialDate={new Date()}
+          onClose={() => setCreateEventOpen(false)}
+        />
+      )}
+
+      <MobileEventFilterMenu
+        anchor={mobileFilterMenu === "FORMAT" ? mobileFilterAnchor : null}
+        options={formatOptions}
+        selectedValues={formatFilters}
+        onToggle={(value) =>
+          toggleFilterValue(value as FormatFilter, setFormatFilters)
+        }
+        onClose={closeMobileFilterMenu}
+      />
+
+      <MobileEventFilterMenu
+        anchor={mobileFilterMenu === "TYPE" ? mobileFilterAnchor : null}
+        options={typeOptions}
+        selectedValues={typeFilters}
+        onToggle={(value) =>
+          toggleFilterValue(value as TypeFilter, setTypeFilters)
+        }
+        onClose={closeMobileFilterMenu}
+      />
+
+      <MobileEventFilterMenu
+        anchor={mobileFilterMenu === "DATE" ? mobileFilterAnchor : null}
+        options={dateOptions}
+        selectedValues={dateFilters}
+        onToggle={(value) =>
+          toggleFilterValue(value as DateFilter, setDateFilters)
+        }
+        onClose={closeMobileFilterMenu}
+      />
 
       <Drawer
         anchor="bottom"
@@ -543,20 +739,66 @@ export const EventsPage = () => {
                 Формат
               </Typography>
 
-              <ToggleButtonGroup
-                value={formatFilter}
-                exclusive
-                onChange={(_, value: FormatFilter | null) => {
-                  if (value) {
-                    setFormatFilter(value);
-                  }
-                }}
-                fullWidth
-              >
-                <ToggleButton value="ALL">Все</ToggleButton>
-                <ToggleButton value="OFFLINE">Очно</ToggleButton>
-                <ToggleButton value="ONLINE">Онлайн</ToggleButton>
-              </ToggleButtonGroup>
+              <FormGroup row>
+                {formatOptions.map((option) => (
+                  <FormControlLabel
+                    key={option.value}
+                    label={option.label}
+                    control={
+                      <Checkbox
+                        checked={formatFilters.includes(option.value)}
+                        onChange={() =>
+                          toggleFilterValue(option.value, setFormatFilters)
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Тип события
+              </Typography>
+              <FormGroup row>
+                {typeOptions.map((option) => (
+                  <FormControlLabel
+                    key={option.value}
+                    label={option.label}
+                    control={
+                      <Checkbox
+                        checked={typeFilters.includes(option.value)}
+                        onChange={() =>
+                          toggleFilterValue(option.value, setTypeFilters)
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Дата
+              </Typography>
+              <FormGroup row>
+                {dateOptions.map((option) => (
+                  <FormControlLabel
+                    key={option.value}
+                    label={option.label}
+                    control={
+                      <Checkbox
+                        checked={dateFilters.includes(option.value)}
+                        onChange={() =>
+                          toggleFilterValue(option.value, setDateFilters)
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
             </Box>
 
             <TextField

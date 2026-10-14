@@ -1,19 +1,13 @@
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
-  Fab,
   Stack,
   Typography,
 } from "@mui/material";
 
-import { Add } from "@mui/icons-material";
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-
-import { CreateEventDialog } from "../components/events/CreateEventDialog";
 
 import { getEvents } from "../api/events";
 
@@ -39,8 +33,6 @@ export const SchedulePage = () => {
 
     return date;
   });
-
-  const [createEventOpen, setCreateEventOpen] = useState(false);
 
   const {
     data: events = [],
@@ -91,13 +83,7 @@ export const SchedulePage = () => {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <Stack direction="row" sx={{ alignItems: "center" }}>
         <Typography
           variant="h4"
           sx={{
@@ -110,20 +96,6 @@ export const SchedulePage = () => {
         >
           Расписание
         </Typography>
-
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setCreateEventOpen(true)}
-          sx={{
-            display: {
-              xs: "none",
-              lg: "inline-flex",
-            },
-          }}
-        >
-          Создать событие
-        </Button>
       </Stack>
 
       {/* Mobile + tablet */}
@@ -159,39 +131,6 @@ export const SchedulePage = () => {
           onWeekChange={changeWeek}
         />
       </Box>
-
-      <Fab
-        color="primary"
-        aria-label="Создать событие"
-        onClick={() => setCreateEventOpen(true)}
-        sx={{
-          display: {
-            xs: "flex",
-            lg: "none",
-          },
-
-          position: "fixed",
-
-          right: 16,
-
-          bottom: {
-            xs: 80,
-            md: 24,
-          },
-
-          zIndex: 900,
-        }}
-      >
-        <Add />
-      </Fab>
-
-      {createEventOpen && (
-        <CreateEventDialog
-          open
-          initialDate={selectedDate}
-          onClose={() => setCreateEventOpen(false)}
-        />
-      )}
     </Stack>
   );
 };

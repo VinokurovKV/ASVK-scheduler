@@ -90,7 +90,7 @@ export const getEventsForDate = (events: Event[], date: Date) => {
     );
 };
 
-const getNextOccurrence = (event: Event, from: Date) => {
+export const getNextEventOccurrenceForEvent = (event: Event, from: Date) => {
   const eventStart = new Date(event.startsAt);
 
   const isCurrentOrUpcoming = (occurrence: Event) => {
@@ -142,7 +142,7 @@ const getNextOccurrence = (event: Event, from: Date) => {
 
 export const getNextEventOccurrence = (events: Event[], from: Date) => {
   return events
-    .map((event) => getNextOccurrence(event, from))
+    .map((event) => getNextEventOccurrenceForEvent(event, from))
     .filter((event): event is Event => event !== null)
     .sort(
       (first, second) =>
