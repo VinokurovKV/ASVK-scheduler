@@ -9,8 +9,20 @@ import { PrismaService } from '../prisma.service.js';
 import type {
   CreateEventInput,
   EventFormat,
+  EventType,
   UpdateEventInput,
 } from './events.types.js';
+
+const eventHasTeacher = (eventType: EventType) =>
+  eventType === 'LECTURE' || eventType === 'SEMINAR';
+
+const normalizeTeacherName = (teacherName?: string | null) => {
+  if (typeof teacherName !== 'string') {
+    return null;
+  }
+
+  return teacherName.trim() || null;
+};
 
 const validateEventDetails = (
   startsAt: Date,
@@ -132,6 +144,10 @@ export class EventsService {
 
         meetingUrl: input.format === 'ONLINE' ? input.meetingUrl : null,
 
+        teacherName: eventHasTeacher(input.eventType ?? 'MEETING')
+          ? normalizeTeacherName(input.teacherName)
+          : null,
+
         calendar: {
           connect: {
             id: calendar.id,
@@ -182,6 +198,7 @@ export class EventsService {
         : existingEvent.endsAt;
 
     const format = input.format ?? existingEvent.format;
+    const eventType = input.eventType ?? existingEvent.eventType;
 
     const room =
       format === 'OFFLINE' ? (input.room ?? existingEvent.room) : null;
@@ -190,6 +207,12 @@ export class EventsService {
       format === 'ONLINE'
         ? (input.meetingUrl ?? existingEvent.meetingUrl)
         : null;
+
+    const teacherName = eventHasTeacher(eventType)
+      ? input.teacherName === undefined
+        ? existingEvent.teacherName
+        : normalizeTeacherName(input.teacherName)
+      : null;
 
     validateEventDetails(startsAt, endsAt, format, room, meetingUrl);
 
@@ -204,12 +227,13 @@ export class EventsService {
         startsAt,
         endsAt,
 
-        eventType: input.eventType,
+        eventType,
         format,
         repeatInterval: input.repeatInterval,
 
         room,
         meetingUrl,
+        teacherName,
       },
       include: eventInclude,
     });

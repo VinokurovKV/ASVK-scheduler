@@ -79,6 +79,7 @@ describe('EventsService calendar access', () => {
       format: 'OFFLINE',
       repeatInterval: 'WEEK',
       room: 'П-8',
+      teacherName: '  Иванов Иван Иванович  ',
     });
 
     expect(prisma.calendar.findFirst).toHaveBeenCalledWith({
@@ -89,6 +90,7 @@ describe('EventsService calendar access', () => {
         data: expect.objectContaining({
           calendar: { connect: { id: 7 } },
           creator: { connect: { id: 42 } },
+          teacherName: 'Иванов Иван Иванович',
         }),
       }),
     );
@@ -160,5 +162,31 @@ describe('EventsService calendar access', () => {
     await expect(
       service.update(42, 10, { title: 'Обновлённый семинар' }),
     ).resolves.toEqual({ id: 10, canEdit: true });
+  });
+
+  it('clears the teacher when an academic event changes its type', async () => {
+    const { prisma, calendars, service } = createService();
+    prisma.event.findUnique.mockResolvedValue({
+      id: 10,
+      startsAt: new Date('2026-10-05T10:00:00.000Z'),
+      endsAt: new Date('2026-10-05T11:00:00.000Z'),
+      eventType: 'LECTURE',
+      format: 'OFFLINE',
+      room: 'П-8',
+      meetingUrl: null,
+      teacherName: 'Иванов Иван Иванович',
+      calendar: { id: 8, type: 'GROUP', groupNumber: '421' },
+    });
+    calendars.canView.mockReturnValue(true);
+    calendars.canManage.mockReturnValue(true);
+    prisma.event.update.mockResolvedValue({ id: 10 });
+
+    await service.update(42, 10, { eventType: 'MEETING' });
+
+    expect(prisma.event.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ teacherName: null }),
+      }),
+    );
   });
 });

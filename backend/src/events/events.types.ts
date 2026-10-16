@@ -15,6 +15,7 @@ export interface CreateEventInput {
 
   room?: string;
   meetingUrl?: string;
+  teacherName?: string | null;
   calendarId?: number;
 }
 
@@ -31,4 +32,5 @@ export interface UpdateEventInput {
 
   room?: string;
   meetingUrl?: string;
+  teacherName?: string | null;
 }
