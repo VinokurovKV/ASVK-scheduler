@@ -38,6 +38,7 @@ import {
   eventTypeLabelTextColor,
   eventTypeStyles,
 } from "../../constants/events";
+import { getCalendarLabel } from "../../constants/calendars";
 import type { Event, RepeatInterval } from "../../types/Event";
 import { EditEventDialog } from "./EditEventDialog";
 
@@ -217,6 +218,11 @@ export const EventDetailsDialog = ({
               }}
             >
               <Chip
+                label={getCalendarLabel(event.calendar)}
+                size="small"
+                variant="outlined"
+              />
+              <Chip
                 label={eventTypeLabels[event.eventType]}
                 size="small"
                 sx={{
@@ -299,45 +305,47 @@ export const EventDetailsDialog = ({
         </Stack>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: {
-            xs: "stretch",
-            lg: "flex-end",
-          },
-          flexShrink: 0,
-          p: 2,
-          borderTop: "1px solid",
-          borderColor: "divider",
-          backgroundColor: "background.paper",
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", lg: "row" }}
-          spacing={1}
-          sx={{ width: { xs: "100%", lg: "auto" } }}
+      {event.canEdit && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: {
+              xs: "stretch",
+              lg: "flex-end",
+            },
+            flexShrink: 0,
+            p: 2,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            backgroundColor: "background.paper",
+          }}
         >
-          <Button
-            variant="contained"
-            startIcon={<EditOutlined />}
-            fullWidth={isMobile}
-            onClick={() => setEditDialogOpen(true)}
+          <Stack
+            direction={{ xs: "column", lg: "row" }}
+            spacing={1}
+            sx={{ width: { xs: "100%", lg: "auto" } }}
           >
-            Редактировать
-          </Button>
+            <Button
+              variant="contained"
+              startIcon={<EditOutlined />}
+              fullWidth={isMobile}
+              onClick={() => setEditDialogOpen(true)}
+            >
+              Редактировать
+            </Button>
 
-          <Button
-            color="error"
-            variant="outlined"
-            startIcon={<DeleteOutlined />}
-            fullWidth={isMobile}
-            onClick={() => setDeleteConfirmationOpen(true)}
-          >
-            Удалить событие
-          </Button>
-        </Stack>
-      </Box>
+            <Button
+              color="error"
+              variant="outlined"
+              startIcon={<DeleteOutlined />}
+              fullWidth={isMobile}
+              onClick={() => setDeleteConfirmationOpen(true)}
+            >
+              Удалить событие
+            </Button>
+          </Stack>
+        </Box>
+      )}
 
       {editDialogOpen && (
         <EditEventDialog

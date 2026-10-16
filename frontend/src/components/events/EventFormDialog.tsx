@@ -20,7 +20,9 @@ import {
 
 import { useState } from "react";
 
+import { getCalendarLabel } from "../../constants/calendars";
 import type {
+  Calendar,
   EventFormat,
   EventType,
   RepeatInterval,
@@ -37,6 +39,7 @@ export interface EventFormValues {
   repeatInterval: RepeatInterval;
   room?: string;
   meetingUrl?: string;
+  calendarId?: number;
 }
 
 interface EventFormDialogProps {
@@ -46,6 +49,7 @@ interface EventFormDialogProps {
   pendingLabel: string;
   errorMessage: string;
   initialValues: EventFormValues;
+  calendarOptions?: Calendar[];
   isPending: boolean;
   isError: boolean;
   onSubmit: (values: EventFormValues) => void;
@@ -85,6 +89,7 @@ export const EventFormDialog = ({
   pendingLabel,
   errorMessage,
   initialValues,
+  calendarOptions,
   isPending,
   isError,
   onSubmit,
@@ -120,6 +125,15 @@ export const EventFormDialog = ({
   const [meetingUrl, setMeetingUrl] = useState(
     initialValues.meetingUrl ?? "",
   );
+  const [calendarId, setCalendarId] = useState<number | undefined>(
+    initialValues.calendarId ??
+      calendarOptions?.find((calendar) => calendar.type === "PERSONAL")?.id ??
+      calendarOptions?.[0]?.id,
+  );
+  const selectedCalendarId =
+    calendarId ??
+    calendarOptions?.find((calendar) => calendar.type === "PERSONAL")?.id ??
+    calendarOptions?.[0]?.id;
 
   const isTitleValid = title.trim().length > 0;
   const isLocationValid =
@@ -145,7 +159,8 @@ export const EventFormDialog = ({
     isLocationValid &&
     isStartTimeValid &&
     isEndTimeValid &&
-    isTimeOrderValid;
+    isTimeOrderValid &&
+    (!calendarOptions || selectedCalendarId !== undefined);
 
   const handleSubmit = () => {
     if (!isFormValid || !startDate || !endDate) {
@@ -162,6 +177,7 @@ export const EventFormDialog = ({
       repeatInterval,
       room: format === "OFFLINE" ? room.trim() : undefined,
       meetingUrl: format === "ONLINE" ? meetingUrl.trim() : undefined,
+      calendarId: selectedCalendarId,
     });
   };
 
@@ -245,6 +261,7 @@ export const EventFormDialog = ({
               gridTemplateAreas: {
                 xs: `
                   "title"
+                  "calendar"
                   "description"
                   "eventType"
                   "date"
@@ -255,6 +272,7 @@ export const EventFormDialog = ({
                 `,
                 lg: `
                   "title title"
+                  "calendar calendar"
                   "description description"
                   "eventType repeat"
                   "date date"
@@ -274,6 +292,31 @@ export const EventFormDialog = ({
               fullWidth
               sx={{ gridArea: "title" }}
             />
+
+            {calendarOptions && (
+              <TextField
+                select
+                label="Календарь"
+                value={selectedCalendarId ?? ""}
+                onChange={(event) => setCalendarId(Number(event.target.value))}
+                helperText={
+                  calendarOptions.find(
+                    (calendar) => calendar.id === selectedCalendarId,
+                  )
+                    ?.type === "GROUP"
+                    ? "Событие будет доступно всей группе"
+                    : "Событие будет доступно только вам"
+                }
+                fullWidth
+                sx={{ gridArea: "calendar" }}
+              >
+                {calendarOptions.map((calendar) => (
+                  <MenuItem key={calendar.id} value={calendar.id}>
+                    {getCalendarLabel(calendar)}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
 
             <TextField
               label="Описание"

@@ -1,4 +1,9 @@
-import { Logout, PersonOutlined, SettingsOutlined } from "@mui/icons-material";
+import {
+  AdminPanelSettingsOutlined,
+  Logout,
+  PersonOutlined,
+  SettingsOutlined,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -17,6 +22,7 @@ interface UserMenuProps {
   initials: string;
   userName: string;
   userRoleLabel: string;
+  isOwner: boolean;
   logoutPending: boolean;
   onClose: () => void;
   onLogout: () => void;
@@ -28,6 +34,7 @@ export const UserMenu = ({
   initials,
   userName,
   userRoleLabel,
+  isOwner,
   logoutPending,
   onClose,
   onLogout,
@@ -148,6 +155,18 @@ export const UserMenu = ({
         </ListItemIcon>
         <ListItemText>Настройки</ListItemText>
       </MenuItem>
+
+      {isOwner && (
+        <MenuItem
+          onClick={() => handleNavigation("/system")}
+          selected={location.pathname === "/system"}
+        >
+          <ListItemIcon>
+            <AdminPanelSettingsOutlined fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Система</ListItemText>
+        </MenuItem>
+      )}
 
       <Divider />
 

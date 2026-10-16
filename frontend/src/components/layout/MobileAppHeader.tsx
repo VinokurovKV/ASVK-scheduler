@@ -23,12 +23,14 @@ export const MobileAppHeader = ({
   const isActiveSessionsPage = location.pathname === "/settings/sessions";
   const isChangePasswordPage = location.pathname === "/settings/password";
   const isSupportPage = location.pathname === "/support";
+  const isSystemPage = location.pathname === "/system";
   const isSubpage =
     isProfilePage ||
     isSettingsPage ||
     isActiveSessionsPage ||
     isChangePasswordPage ||
-    isSupportPage;
+    isSupportPage ||
+    isSystemPage;
 
   const parentPath =
     (
@@ -56,6 +58,8 @@ export const MobileAppHeader = ({
           ? "Смена пароля"
           : isSupportPage
             ? "Поддержка"
+            : isSystemPage
+              ? "Система"
             : "ASVK Schedule";
 
   return (

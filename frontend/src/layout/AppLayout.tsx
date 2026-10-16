@@ -76,6 +76,7 @@ export const AppLayout = () => {
     `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
   const userName = user?.name ?? "Пользователь";
   const userRoleLabel = getUserRoleLabel(user?.role, user?.groupNumber);
+  const isOwner = user?.appRoles.includes("OWNER") === true;
 
   const handleUserMenuOpen = (element: HTMLElement) => {
     const avatar = element.querySelector<HTMLElement>(".MuiAvatar-root");
@@ -131,6 +132,7 @@ export const AppLayout = () => {
         initials={initials}
         userName={userName}
         userRoleLabel={userRoleLabel}
+        isOwner={isOwner}
         logoutPending={logoutMutation.isPending}
         onClose={() => setUserMenuAnchor(null)}
         onLogout={handleLogoutClick}

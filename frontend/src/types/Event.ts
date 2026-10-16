@@ -6,7 +6,9 @@ export interface Calendar {
   id: number;
   name: string;
   type: "PERSONAL" | "GROUP" | "DEPARTMENT";
-  ownerId: number;
+  groupNumber: string | null;
+  ownerId: number | null;
+  canManage?: boolean;
 }
 
 export interface EventCreator {
@@ -36,6 +38,7 @@ export interface Event {
 
   calendar: Calendar;
   creator: EventCreator;
+  canEdit: boolean;
 }
 
 export interface CreateEventInput {
@@ -51,7 +54,7 @@ export interface CreateEventInput {
 
   room?: string;
   meetingUrl?: string;
-
+  calendarId?: number;
 }
 
 export interface UpdateEventInput {

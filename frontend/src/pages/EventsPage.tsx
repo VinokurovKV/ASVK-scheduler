@@ -32,6 +32,10 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 
 import { getCurrentUser } from "../api/auth";
 import { AUTH_QUERY_KEY } from "../api/authQuery";
+import {
+  CALENDARS_QUERY_KEY,
+  getCalendars,
+} from "../api/calendars";
 import { getEvents } from "../api/events";
 import { CreateEventDialog } from "../components/events/CreateEventDialog";
 import { DesktopEventRow } from "../components/events/DesktopEventRow";
@@ -39,6 +43,7 @@ import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
 import { MobileEventCard } from "../components/events/MobileEventCard";
 import { MobileEventFilterMenu } from "../components/events/MobileEventFilterMenu";
 import { eventTypeLabels } from "../constants/events";
+import { getCalendarLabel } from "../constants/calendars";
 import { getNextEventOccurrenceForEvent } from "./schedule/scheduleUtils";
 import type {
   Event,
@@ -51,7 +56,7 @@ type FormatFilter = EventFormat;
 type RepeatFilter = "ALL" | RepeatInterval;
 type TypeFilter = EventType;
 type DateFilter = "UPCOMING" | "PAST";
-type MobileFilterMenu = "FORMAT" | "TYPE" | "DATE";
+type MobileFilterMenu = "FORMAT" | "TYPE" | "DATE" | "CALENDAR";
 
 const formatOptions: Array<{ value: FormatFilter; label: string }> = [
   { value: "OFFLINE", label: "Очно" },
@@ -104,12 +109,18 @@ export const EventsPage = () => {
   const [formatFilters, setFormatFilters] = useState<FormatFilter[]>([]);
   const [typeFilters, setTypeFilters] = useState<TypeFilter[]>([]);
   const [dateFilters, setDateFilters] = useState<DateFilter[]>([]);
+  const [calendarFilters, setCalendarFilters] = useState<number[]>([]);
   const [repeatFilter, setRepeatFilter] = useState<RepeatFilter>("ALL");
   const [onlyMine, setOnlyMine] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: AUTH_QUERY_KEY,
     queryFn: getCurrentUser,
+  });
+
+  const { data: calendars = [] } = useQuery({
+    queryKey: CALENDARS_QUERY_KEY,
+    queryFn: getCalendars,
   });
 
   const {
@@ -155,6 +166,7 @@ export const EventsPage = () => {
     Number(formatFilters.length > 0) +
     Number(typeFilters.length > 0) +
     Number(dateFilters.length > 0) +
+    Number(calendarFilters.length > 0) +
     Number(repeatFilter !== "ALL") +
     Number(onlyMine);
   const filteredEvents = sortedEvents.filter((event) => {
@@ -181,6 +193,9 @@ export const EventsPage = () => {
       (dateFilters.includes("PAST") && eventEndTime < currentTime);
     const matchesRepeat =
       repeatFilter === "ALL" || event.repeatInterval === repeatFilter;
+    const matchesCalendar =
+      calendarFilters.length === 0 ||
+      calendarFilters.includes(event.calendarId);
     const matchesOwner = !onlyMine || event.creatorId === currentUser?.id;
 
     return (
@@ -189,6 +204,7 @@ export const EventsPage = () => {
       matchesType &&
       matchesDate &&
       matchesRepeat &&
+      matchesCalendar &&
       matchesOwner
     );
   });
@@ -197,6 +213,7 @@ export const EventsPage = () => {
     setFormatFilters([]);
     setTypeFilters([]);
     setDateFilters([]);
+    setCalendarFilters([]);
     setRepeatFilter("ALL");
     setOnlyMine(false);
   };
@@ -219,6 +236,20 @@ export const EventsPage = () => {
       : dateFilters.length > 1
         ? `Дата (${dateFilters.length})`
         : "Дата";
+  const calendarFilterLabel =
+    calendarFilters.length === 1
+      ? getCalendarLabel(
+          calendars.find(({ id }) => id === calendarFilters[0]) ?? {
+            id: calendarFilters[0],
+            name: "Календарь",
+            type: "PERSONAL",
+            groupNumber: null,
+            ownerId: null,
+          },
+        )
+      : calendarFilters.length > 1
+        ? `Календарь (${calendarFilters.length})`
+        : "Календарь";
 
   const openMobileFilterMenu = (
     menu: MobileFilterMenu,
@@ -440,6 +471,7 @@ export const EventsPage = () => {
               lg: "flex",
             },
             alignItems: "center",
+            flexWrap: "wrap",
             gap: 1,
             p: 1.25,
             borderColor: "app.border.card",
@@ -486,6 +518,16 @@ export const EventsPage = () => {
             sx={mobileFilterButtonStyles}
           >
             {dateFilterLabel}
+          </Button>
+          <Button
+            variant={calendarFilters.length === 0 ? "outlined" : "contained"}
+            endIcon={<KeyboardArrowDown />}
+            onClick={(event) =>
+              openMobileFilterMenu("CALENDAR", event.currentTarget)
+            }
+            sx={mobileFilterButtonStyles}
+          >
+            {calendarFilterLabel}
           </Button>
 
           <FormControlLabel
@@ -654,6 +696,9 @@ export const EventsPage = () => {
         <CreateEventDialog
           open
           initialDate={new Date()}
+          calendars={calendars.filter(
+            (calendar) => calendar.canManage === true,
+          )}
           onClose={() => setCreateEventOpen(false)}
         />
       )}
@@ -685,6 +730,24 @@ export const EventsPage = () => {
         onToggle={(value) =>
           toggleFilterValue(value as DateFilter, setDateFilters)
         }
+        onClose={closeMobileFilterMenu}
+      />
+
+      <MobileEventFilterMenu
+        anchor={mobileFilterMenu === "CALENDAR" ? mobileFilterAnchor : null}
+        options={calendars.map((calendar) => ({
+          value: String(calendar.id),
+          label: getCalendarLabel(calendar),
+        }))}
+        selectedValues={calendarFilters.map(String)}
+        onToggle={(value) => {
+          const calendarId = Number(value);
+          setCalendarFilters((current) =>
+            current.includes(calendarId)
+              ? current.filter((id) => id !== calendarId)
+              : [...current, calendarId],
+          );
+        }}
         onClose={closeMobileFilterMenu}
       />
 
@@ -793,6 +856,32 @@ export const EventsPage = () => {
                         checked={dateFilters.includes(option.value)}
                         onChange={() =>
                           toggleFilterValue(option.value, setDateFilters)
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Календарь
+              </Typography>
+              <FormGroup row>
+                {calendars.map((calendar) => (
+                  <FormControlLabel
+                    key={calendar.id}
+                    label={getCalendarLabel(calendar)}
+                    control={
+                      <Checkbox
+                        checked={calendarFilters.includes(calendar.id)}
+                        onChange={() =>
+                          setCalendarFilters((current) =>
+                            current.includes(calendar.id)
+                              ? current.filter((id) => id !== calendar.id)
+                              : [...current, calendar.id],
+                          )
                         }
                       />
                     }

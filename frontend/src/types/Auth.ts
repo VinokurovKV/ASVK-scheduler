@@ -1,4 +1,5 @@
 export type AuthProvider = "STANDARD" | "ASVK";
+export type AppRole = "GROUP_LEADER" | "OWNER";
 
 export type UserRole =
   | "STUDENT"
@@ -17,6 +18,7 @@ export interface AuthUser {
 
   role: UserRole | null;
   groupNumber: string | null;
+  appRoles: AppRole[];
 
   authProvider: AuthProvider;
 

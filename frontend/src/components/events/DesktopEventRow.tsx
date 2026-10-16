@@ -25,6 +25,7 @@ import {
   eventTypeLabels,
   eventTypeStyles,
 } from "../../constants/events";
+import { getCalendarLabel } from "../../constants/calendars";
 import type { Event, EventType } from "../../types/Event";
 
 interface DesktopEventRowProps {
@@ -161,6 +162,19 @@ export const DesktopEventRow = ({
       <Box sx={{ minWidth: 0 }}>
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }}>
           <Chip
+            label={getCalendarLabel(event.calendar)}
+            size="small"
+            variant="outlined"
+            sx={{
+              height: 24,
+              borderColor: "app.border.field",
+              color: "text.secondary",
+              fontSize: "0.7rem",
+              fontWeight: 650,
+            }}
+          />
+
+          <Chip
             label={eventTypeLabels[event.eventType]}
             size="small"
             sx={{
@@ -225,21 +239,28 @@ export const DesktopEventRow = ({
         >
           Подробнее
         </Button>
-        <IconButton
-          aria-label={`Редактировать событие «${event.title}»`}
-          onClick={onEdit}
-          sx={{ border: "1px solid", borderColor: "app.border.field" }}
-        >
-          <EditOutlined fontSize="small" />
-        </IconButton>
-        <IconButton
-          color="error"
-          aria-label={`Удалить событие «${event.title}»`}
-          onClick={onDelete}
-          sx={{ border: "1px solid", borderColor: "app.status.error.border" }}
-        >
-          <DeleteOutlined fontSize="small" />
-        </IconButton>
+        {event.canEdit && (
+          <>
+            <IconButton
+              aria-label={`Редактировать событие «${event.title}»`}
+              onClick={onEdit}
+              sx={{ border: "1px solid", borderColor: "app.border.field" }}
+            >
+              <EditOutlined fontSize="small" />
+            </IconButton>
+            <IconButton
+              color="error"
+              aria-label={`Удалить событие «${event.title}»`}
+              onClick={onDelete}
+              sx={{
+                border: "1px solid",
+                borderColor: "app.status.error.border",
+              }}
+            >
+              <DeleteOutlined fontSize="small" />
+            </IconButton>
+          </>
+        )}
       </Stack>
     </Card>
   );

@@ -22,6 +22,7 @@ import {
   eventTypeLabels,
   eventTypeStyles,
 } from "../../constants/events";
+import { getCalendarLabel } from "../../constants/calendars";
 import type { Event, EventType } from "../../types/Event";
 
 interface MobileEventCardProps {
@@ -161,6 +162,19 @@ export const MobileEventCard = ({ event, onOpen }: MobileEventCardProps) => {
             direction="row"
             sx={{ mt: 0.75, flexWrap: "wrap", gap: 0.5 }}
           >
+            <Chip
+              label={getCalendarLabel(event.calendar)}
+              size="small"
+              variant="outlined"
+              sx={{
+                height: 22,
+                borderColor: "app.border.field",
+                color: "text.secondary",
+                fontSize: "0.66rem",
+                fontWeight: 650,
+              }}
+            />
+
             <Chip
               label={eventTypeLabels[event.eventType]}
               size="small"

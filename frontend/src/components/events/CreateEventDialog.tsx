@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createEvent } from "../../api/events";
+import type { Calendar } from "../../types/Event";
 import {
   EventFormDialog,
   type EventFormValues,
@@ -9,12 +10,14 @@ import {
 interface CreateEventDialogProps {
   open: boolean;
   initialDate: Date;
+  calendars: Calendar[];
   onClose: () => void;
 }
 
 export const CreateEventDialog = ({
   open,
   initialDate,
+  calendars,
   onClose,
 }: CreateEventDialogProps) => {
   const queryClient = useQueryClient();
@@ -57,7 +60,10 @@ export const CreateEventDialog = ({
         repeatInterval: "WEEK",
         room: "",
         meetingUrl: "",
+        calendarId:
+          calendars.find((calendar) => calendar.type === "PERSONAL")?.id,
       }}
+      calendarOptions={calendars}
       isPending={createEventMutation.isPending}
       isError={createEventMutation.isError}
       onSubmit={(values) => createEventMutation.mutate(values)}

@@ -15,6 +15,7 @@ import { RegisterPage } from "./pages/RegisterPage.tsx";
 import { SchedulePage } from "./pages/SchedulePage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
 import { SupportPage } from "./pages/SupportPage.tsx";
+import { SystemPage } from "./pages/SystemPage.tsx";
 
 const App = () => {
   return (
@@ -42,6 +43,8 @@ const App = () => {
           <Route path="settings/password" element={<ChangePasswordPage />} />
 
           <Route path="support" element={<SupportPage />} />
+
+          <Route path="system" element={<SystemPage />} />
         </Route>
       </Route>
     </Routes>
