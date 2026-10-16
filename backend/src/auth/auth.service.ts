@@ -34,6 +34,7 @@ const publicUserSelect = {
 
   role: true,
   groupNumber: true,
+  appRoles: true,
 
   authProvider: true,
 

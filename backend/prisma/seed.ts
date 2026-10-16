@@ -22,14 +22,25 @@ async function main() {
       username: 'kirill',
       email: 'kirill@asvk.cs.msu.ru',
       authProvider: 'ASVK',
+      role: 'STUDENT',
+      groupNumber: '421',
+      appRoles: ['OWNER'],
     },
   });
 
-  const calendar = await prisma.calendar.create({
+  const personalCalendar = await prisma.calendar.create({
     data: {
       name: 'Мой календарь',
       type: 'PERSONAL',
       ownerId: user.id,
+    },
+  });
+
+  const groupCalendar = await prisma.calendar.create({
+    data: {
+      name: 'Группа 421',
+      type: 'GROUP',
+      groupNumber: '421',
     },
   });
 
@@ -42,7 +53,7 @@ async function main() {
         endsAt: new Date('2026-10-05T12:05:00+03:00'),
         format: 'OFFLINE',
         room: 'П-8',
-        calendarId: calendar.id,
+        calendarId: groupCalendar.id,
         creatorId: user.id,
       },
 
@@ -53,7 +64,7 @@ async function main() {
         endsAt: new Date('2026-10-07T13:55:00+03:00'),
         format: 'OFFLINE',
         room: '764',
-        calendarId: calendar.id,
+        calendarId: groupCalendar.id,
         creatorId: user.id,
       },
 
@@ -64,7 +75,7 @@ async function main() {
         endsAt: new Date('2026-10-08T16:30:00+03:00'),
         format: 'ONLINE',
         meetingUrl: 'https://telemost.yandex.ru/example',
-        calendarId: calendar.id,
+        calendarId: personalCalendar.id,
         creatorId: user.id,
       },
 
@@ -75,7 +86,7 @@ async function main() {
         endsAt: new Date('2026-10-09T19:30:00+03:00'),
         format: 'OFFLINE',
         room: '685',
-        calendarId: calendar.id,
+        calendarId: groupCalendar.id,
         creatorId: user.id,
       },
     ],
@@ -83,7 +94,8 @@ async function main() {
 
   console.log('Seed completed');
   console.log(`User ID: ${user.id}`);
-  console.log(`Calendar ID: ${calendar.id}`);
+  console.log(`Personal calendar ID: ${personalCalendar.id}`);
+  console.log(`Group calendar ID: ${groupCalendar.id}`);
 }
 
 main()

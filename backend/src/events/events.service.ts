@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CalendarsService } from '../calendars/calendars.service.js';
 import { PrismaService } from '../prisma.service.js';
 import type {
   CreateEventInput,
@@ -48,13 +50,21 @@ const eventInclude = {
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly calendarsService: CalendarsService,
+  ) {}
 
-  findAll(userId: number) {
-    return this.prisma.event.findMany({
+  async findAll(userId: number) {
+    const calendars = await this.calendarsService.findAll(userId);
+    const calendarPermissions = new Map(
+      calendars.map((calendar) => [calendar.id, calendar.canManage]),
+    );
+
+    const events = await this.prisma.event.findMany({
       where: {
-        calendar: {
-          ownerId: userId,
+        calendarId: {
+          in: calendars.map((calendar) => calendar.id),
         },
       },
       orderBy: {
@@ -62,6 +72,11 @@ export class EventsService {
       },
       include: eventInclude,
     });
+
+    return events.map((event) => ({
+      ...event,
+      canEdit: calendarPermissions.get(event.calendarId) === true,
+    }));
   }
 
   async create(userId: number, input: CreateEventInput) {
@@ -76,21 +91,32 @@ export class EventsService {
       input.meetingUrl,
     );
 
-    const calendar = await this.prisma.calendar.findFirst({
-      where: {
-        ownerId: userId,
-        type: 'PERSONAL',
-      },
-      select: {
-        id: true,
-      },
-    });
+    const user = await this.calendarsService.getAccessUser(userId);
+
+    if (
+      input.calendarId !== undefined &&
+      (!Number.isInteger(input.calendarId) || input.calendarId <= 0)
+    ) {
+      throw new BadRequestException('Calendar has an invalid value');
+    }
+
+    const calendar = input.calendarId
+      ? await this.calendarsService.getCalendarForManaging(
+          user,
+          input.calendarId,
+        )
+      : await this.prisma.calendar.findFirst({
+          where: {
+            ownerId: userId,
+            type: 'PERSONAL',
+          },
+        });
 
     if (!calendar) {
       throw new NotFoundException('Personal calendar not found');
     }
 
-    return this.prisma.event.create({
+    const event = await this.prisma.event.create({
       data: {
         title: input.title,
         description: input.description,
@@ -121,20 +147,28 @@ export class EventsService {
 
       include: eventInclude,
     });
+
+    return { ...event, canEdit: true };
   }
 
   async update(userId: number, id: number, input: UpdateEventInput) {
-    const existingEvent = await this.prisma.event.findFirst({
+    const user = await this.calendarsService.getAccessUser(userId);
+    const existingEvent = await this.prisma.event.findUnique({
       where: {
         id,
-        calendar: {
-          ownerId: userId,
-        },
       },
+      include: { calendar: true },
     });
 
-    if (!existingEvent) {
+    if (
+      !existingEvent ||
+      !this.calendarsService.canView(user, existingEvent.calendar)
+    ) {
       throw new NotFoundException('Event not found');
+    }
+
+    if (!this.calendarsService.canManage(user, existingEvent.calendar)) {
+      throw new ForbiddenException('Event is read-only');
     }
 
     const startsAt =
@@ -159,7 +193,7 @@ export class EventsService {
 
     validateEventDetails(startsAt, endsAt, format, room, meetingUrl);
 
-    return this.prisma.event.update({
+    const event = await this.prisma.event.update({
       where: {
         id,
       },
@@ -179,20 +213,25 @@ export class EventsService {
       },
       include: eventInclude,
     });
+
+    return { ...event, canEdit: true };
   }
 
   async remove(userId: number, id: number) {
-    const result = await this.prisma.event.deleteMany({
-      where: {
-        id,
-        calendar: {
-          ownerId: userId,
-        },
-      },
+    const user = await this.calendarsService.getAccessUser(userId);
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: { calendar: true },
     });
 
-    if (result.count === 0) {
+    if (!event || !this.calendarsService.canView(user, event.calendar)) {
       throw new NotFoundException('Event not found');
     }
+
+    if (!this.calendarsService.canManage(user, event.calendar)) {
+      throw new ForbiddenException('Event is read-only');
+    }
+
+    await this.prisma.event.delete({ where: { id } });
   }
 }

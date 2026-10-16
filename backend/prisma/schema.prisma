@@ -54,6 +54,11 @@ enum UserRole {
   EMPLOYEE
 }
 
+enum AppRole {
+  GROUP_LEADER
+  OWNER
+}
+
 enum SupportRequestStatus {
   OPEN
   IN_PROGRESS
@@ -72,6 +77,7 @@ model User {
 
   role        UserRole?
   groupNumber String?
+  appRoles    AppRole[] @default([])
 
   authProvider AuthProvider @default(STANDARD)
 
@@ -136,17 +142,21 @@ model SupportRequest {
 }
 
 model Calendar {
-  id   Int          @id @default(autoincrement())
-  name String
-  type CalendarType
+  id          Int          @id @default(autoincrement())
+  name        String
+  type        CalendarType
+  groupNumber String?
 
-  ownerId Int
-  owner   User @relation(fields: [ownerId], references: [id])
+  ownerId Int?
+  owner   User? @relation(fields: [ownerId], references: [id])
 
   events Event[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([type, groupNumber])
+  @@index([ownerId, type])
 }
 
 model Event {

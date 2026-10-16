@@ -1,44 +1,75 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import type {
+  CalendarAccessUser,
+  CalendarsService,
+} from '../calendars/calendars.service.js';
 import type { PrismaService } from '../prisma.service.js';
 import { EventsService } from './events.service.js';
 
+const accessUser: CalendarAccessUser = {
+  id: 42,
+  groupNumber: '421',
+  appRoles: [],
+};
+
 const createPrismaMock = () => ({
-  calendar: {
-    findFirst: vi.fn(),
-  },
+  calendar: { findFirst: vi.fn() },
   event: {
     findMany: vi.fn(),
-    findFirst: vi.fn(),
+    findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
-    deleteMany: vi.fn(),
+    delete: vi.fn(),
   },
 });
 
-describe('EventsService ownership', () => {
-  it('returns only events from calendars owned by the current user', async () => {
-    const prisma = createPrismaMock();
-    prisma.event.findMany.mockResolvedValue([]);
-    const service = new EventsService(prisma as unknown as PrismaService);
+const createCalendarsMock = () => ({
+  findAll: vi.fn(),
+  getAccessUser: vi.fn().mockResolvedValue(accessUser),
+  getCalendarForManaging: vi.fn(),
+  canView: vi.fn(),
+  canManage: vi.fn(),
+});
 
-    await service.findAll(42);
+const createService = () => {
+  const prisma = createPrismaMock();
+  const calendars = createCalendarsMock();
+  const service = new EventsService(
+    prisma as unknown as PrismaService,
+    calendars as unknown as CalendarsService,
+  );
+
+  return { prisma, calendars, service };
+};
+
+describe('EventsService calendar access', () => {
+  it('returns events from every accessible calendar with edit permissions', async () => {
+    const { prisma, calendars, service } = createService();
+    calendars.findAll.mockResolvedValue([
+      { id: 7, canManage: true },
+      { id: 8, canManage: false },
+    ]);
+    prisma.event.findMany.mockResolvedValue([
+      { id: 1, calendarId: 7 },
+      { id: 2, calendarId: 8 },
+    ]);
+
+    await expect(service.findAll(42)).resolves.toEqual([
+      { id: 1, calendarId: 7, canEdit: true },
+      { id: 2, calendarId: 8, canEdit: false },
+    ]);
 
     expect(prisma.event.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          calendar: {
-            ownerId: 42,
-          },
-        },
+        where: { calendarId: { in: [7, 8] } },
       }),
     );
   });
 
-  it('uses the current user and their personal calendar when creating an event', async () => {
-    const prisma = createPrismaMock();
+  it('uses the personal calendar by default when creating an event', async () => {
+    const { prisma, service } = createService();
     prisma.calendar.findFirst.mockResolvedValue({ id: 7 });
     prisma.event.create.mockResolvedValue({ id: 1 });
-    const service = new EventsService(prisma as unknown as PrismaService);
 
     await service.create(42, {
       title: 'Семинар',
@@ -51,74 +82,83 @@ describe('EventsService ownership', () => {
     });
 
     expect(prisma.calendar.findFirst).toHaveBeenCalledWith({
-      where: {
-        ownerId: 42,
-        type: 'PERSONAL',
-      },
-      select: {
-        id: true,
-      },
+      where: { ownerId: 42, type: 'PERSONAL' },
     });
     expect(prisma.event.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          calendar: {
-            connect: {
-              id: 7,
-            },
-          },
-          creator: {
-            connect: {
-              id: 42,
-            },
-          },
+          calendar: { connect: { id: 7 } },
+          creator: { connect: { id: 42 } },
         }),
       }),
     );
   });
 
-  it('does not delete an event outside the current user calendar', async () => {
-    const prisma = createPrismaMock();
-    prisma.event.deleteMany.mockResolvedValue({ count: 0 });
-    const service = new EventsService(prisma as unknown as PrismaService);
+  it('checks management rights for a selected calendar', async () => {
+    const { prisma, calendars, service } = createService();
+    calendars.getCalendarForManaging.mockResolvedValue({ id: 9 });
+    prisma.event.create.mockResolvedValue({ id: 1 });
+
+    await service.create(42, {
+      title: 'Контрольная работа',
+      startsAt: '2026-10-05T10:00:00.000Z',
+      endsAt: '2026-10-05T11:00:00.000Z',
+      eventType: 'SEMINAR',
+      format: 'OFFLINE',
+      room: 'П-8',
+      calendarId: 9,
+    });
+
+    expect(calendars.getCalendarForManaging).toHaveBeenCalledWith(
+      accessUser,
+      9,
+    );
+  });
+
+  it('does not expose an event from an inaccessible calendar', async () => {
+    const { prisma, calendars, service } = createService();
+    prisma.event.findUnique.mockResolvedValue({
+      id: 10,
+      calendar: { id: 11, type: 'GROUP' },
+    });
+    calendars.canView.mockReturnValue(false);
 
     await expect(service.remove(42, 10)).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    expect(prisma.event.deleteMany).toHaveBeenCalledWith({
-      where: {
-        id: 10,
-        calendar: {
-          ownerId: 42,
-        },
-      },
-    });
   });
 
-  it('looks up an event through the current user calendar before updating it', async () => {
-    const prisma = createPrismaMock();
-    prisma.event.findFirst.mockResolvedValue({
+  it('prevents a group member from editing a read-only group event', async () => {
+    const { prisma, calendars, service } = createService();
+    prisma.event.findUnique.mockResolvedValue({
+      id: 10,
+      calendar: { id: 8, type: 'GROUP', groupNumber: '421' },
+    });
+    calendars.canView.mockReturnValue(true);
+    calendars.canManage.mockReturnValue(false);
+
+    await expect(
+      service.update(42, 10, { title: 'Новое название' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('allows an authorized user to update a group event', async () => {
+    const { prisma, calendars, service } = createService();
+    prisma.event.findUnique.mockResolvedValue({
       id: 10,
       startsAt: new Date('2026-10-05T10:00:00.000Z'),
       endsAt: new Date('2026-10-05T11:00:00.000Z'),
       format: 'OFFLINE',
       room: 'П-8',
       meetingUrl: null,
+      calendar: { id: 8, type: 'GROUP', groupNumber: '421' },
     });
+    calendars.canView.mockReturnValue(true);
+    calendars.canManage.mockReturnValue(true);
     prisma.event.update.mockResolvedValue({ id: 10 });
-    const service = new EventsService(prisma as unknown as PrismaService);
 
-    await service.update(42, 10, {
-      title: 'Обновлённый семинар',
-    });
-
-    expect(prisma.event.findFirst).toHaveBeenCalledWith({
-      where: {
-        id: 10,
-        calendar: {
-          ownerId: 42,
-        },
-      },
-    });
+    await expect(
+      service.update(42, 10, { title: 'Обновлённый семинар' }),
+    ).resolves.toEqual({ id: 10, canEdit: true });
   });
 });

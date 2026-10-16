@@ -15,6 +15,7 @@ export interface CreateEventInput {
 
   room?: string;
   meetingUrl?: string;
+  calendarId?: number;
 }
 
 export interface UpdateEventInput {
