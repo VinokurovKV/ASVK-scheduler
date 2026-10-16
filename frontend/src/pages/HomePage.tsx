@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { getEvents } from "../api/events";
 import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
+import { formatTeacherShortName } from "../constants/teachers";
 import { eventTypeStyles } from "../constants/events";
 import {
   getEventsForDate,
@@ -153,6 +154,15 @@ const getMinutesFromDayStart = (date: Date) => {
   return (date.getHours() - DAY_START_HOUR) * 60 + date.getMinutes();
 };
 
+const getEventLocationLabel = (event: Event) => {
+  const locationLabel =
+    event.format === "ONLINE" ? "Онлайн" : `Аудитория ${event.room}`;
+
+  return event.teacherName
+    ? `${locationLabel} · ${formatTeacherShortName(event.teacherName)}`
+    : locationLabel;
+};
+
 const EventLocation = ({ event }: { event: Event }) => {
   if (event.format === "ONLINE") {
     return (
@@ -165,7 +175,7 @@ const EventLocation = ({ event }: { event: Event }) => {
       >
         <Videocam fontSize="small" color="action" />
 
-        <Typography variant="body2">Онлайн</Typography>
+        <Typography variant="body2">{getEventLocationLabel(event)}</Typography>
       </Stack>
     );
   }
@@ -180,7 +190,7 @@ const EventLocation = ({ event }: { event: Event }) => {
     >
       <LocationOn fontSize="small" color="action" />
 
-      <Typography variant="body2">Аудитория {event.room}</Typography>
+      <Typography variant="body2">{getEventLocationLabel(event)}</Typography>
     </Stack>
   );
 };
@@ -837,12 +847,7 @@ const DayTimeline = ({
                 100;
               const eventStyle = eventTypeStyles[event.eventType];
               const timeLabel = `${formatTime(event.startsAt)} – ${formatTime(event.endsAt)}`;
-              const locationLabel =
-                event.format === "ONLINE"
-                  ? "Онлайн"
-                  : event.room
-                    ? `Аудитория ${event.room}`
-                    : "Очно";
+              const locationLabel = getEventLocationLabel(event);
 
               return (
                 <Box

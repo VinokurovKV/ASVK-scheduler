@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getEvents } from "../api/events";
+import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
+import type { Event } from "../types/Event";
 
 import { DesktopSchedule } from "./schedule/DesktopSchedule";
 import { MobileSchedule } from "./schedule/MobileSchedule";
@@ -25,6 +27,7 @@ export const SchedulePage = () => {
   const today = new Date();
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(today));
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = new Date();
@@ -113,6 +116,7 @@ export const SchedulePage = () => {
           selectedDate={selectedDate}
           onSelectedDateChange={setSelectedDate}
           onWeekChange={changeWeek}
+          onOpenDetails={setSelectedEvent}
         />
       </Box>
 
@@ -129,8 +133,17 @@ export const SchedulePage = () => {
           events={weekEvents}
           weekStart={weekStart}
           onWeekChange={changeWeek}
+          onOpenDetails={setSelectedEvent}
         />
       </Box>
+
+      {selectedEvent && (
+        <EventDetailsDialog
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onEventUpdated={setSelectedEvent}
+        />
+      )}
     </Stack>
   );
 };

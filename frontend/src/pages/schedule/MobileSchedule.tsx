@@ -8,6 +8,7 @@ import {
 import {
   Box,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   IconButton,
@@ -37,6 +38,7 @@ interface MobileScheduleProps {
   selectedDate: Date;
   onSelectedDateChange: (date: Date) => void;
   onWeekChange: (direction: number) => void;
+  onOpenDetails: (event: Event) => void;
 }
 
 const EventPlace = ({ event }: { event: Event }) => {
@@ -81,6 +83,7 @@ export const MobileSchedule = ({
   selectedDate,
   onSelectedDateChange,
   onWeekChange,
+  onOpenDetails,
 }: MobileScheduleProps) => {
   const today = new Date();
 
@@ -250,8 +253,12 @@ export const MobileSchedule = ({
                   backgroundColor: eventTypeStyles[event.eventType].surface,
                 }}
               >
-                <CardContent>
-                  <Stack spacing={1.5}>
+                <CardActionArea
+                  onClick={() => onOpenDetails(event)}
+                  aria-label={`Открыть событие «${event.title}»`}
+                >
+                  <CardContent>
+                    <Stack spacing={1.5}>
                     <Stack
                       direction="row"
                       spacing={1}
@@ -296,8 +303,9 @@ export const MobileSchedule = ({
                     </Stack>
 
                     <EventPlace event={event} />
-                  </Stack>
-                </CardContent>
+                    </Stack>
+                  </CardContent>
+                </CardActionArea>
               </Card>
             ))}
           </Stack>

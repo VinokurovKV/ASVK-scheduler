@@ -52,6 +52,7 @@ export const EditEventDialog = ({
         repeatInterval: event.repeatInterval,
         room: event.room ?? "",
         meetingUrl: event.meetingUrl ?? "",
+        teacherName: event.teacherName ?? "",
       }}
       isPending={updateEventMutation.isPending}
       isError={updateEventMutation.isError}

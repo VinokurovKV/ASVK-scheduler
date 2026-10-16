@@ -39,6 +39,7 @@ export interface EventFormValues {
   repeatInterval: RepeatInterval;
   room?: string;
   meetingUrl?: string;
+  teacherName?: string | null;
   calendarId?: number;
 }
 
@@ -117,6 +118,9 @@ export const EventFormDialog = ({
     formatTimePart(initialEnd.getMinutes()),
   );
   const [eventType, setEventType] = useState(initialValues.eventType);
+  const [teacherName, setTeacherName] = useState(
+    initialValues.teacherName ?? "",
+  );
   const [repeatInterval, setRepeatInterval] = useState(
     initialValues.repeatInterval,
   );
@@ -134,6 +138,7 @@ export const EventFormDialog = ({
     calendarId ??
     calendarOptions?.find((calendar) => calendar.type === "PERSONAL")?.id ??
     calendarOptions?.[0]?.id;
+  const hasTeacher = eventType === "LECTURE" || eventType === "SEMINAR";
 
   const isTitleValid = title.trim().length > 0;
   const isLocationValid =
@@ -177,6 +182,7 @@ export const EventFormDialog = ({
       repeatInterval,
       room: format === "OFFLINE" ? room.trim() : undefined,
       meetingUrl: format === "ONLINE" ? meetingUrl.trim() : undefined,
+      teacherName: hasTeacher ? teacherName.trim() || null : null,
       calendarId: selectedCalendarId,
     });
   };
@@ -264,6 +270,7 @@ export const EventFormDialog = ({
                   "calendar"
                   "description"
                   "eventType"
+                  "teacher"
                   "date"
                   "time"
                   "repeat"
@@ -275,6 +282,7 @@ export const EventFormDialog = ({
                   "calendar calendar"
                   "description description"
                   "eventType repeat"
+                  "teacher teacher"
                   "date date"
                   "time time"
                   "format format"
@@ -343,6 +351,17 @@ export const EventFormDialog = ({
               <MenuItem value="WORK_MEETING">Совещание</MenuItem>
               <MenuItem value="MEETING">Встреча</MenuItem>
             </TextField>
+
+            {hasTeacher && (
+              <TextField
+                label="Преподаватель"
+                value={teacherName}
+                onChange={(event) => setTeacherName(event.target.value)}
+                placeholder="Например, Иванов Иван Иванович"
+                fullWidth
+                sx={{ gridArea: "teacher" }}
+              />
+            )}
 
             <TextField
               label="Дата"

@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   LocationOn,
+  PersonOutlined,
   Repeat,
   Videocam,
 } from "@mui/icons-material";
@@ -107,6 +108,7 @@ export const EventDetailsDialog = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const online = event.format === "ONLINE";
+  const isDirectAction = initialAction !== "details";
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(
     initialAction === "delete",
   );
@@ -132,8 +134,83 @@ export const EventDetailsDialog = ({
     }
 
     deleteEventMutation.reset();
+
+    if (isDirectAction) {
+      onClose();
+      return;
+    }
+
     setDeleteConfirmationOpen(false);
   };
+
+  const closeEditDialog = () => {
+    if (isDirectAction) {
+      onClose();
+      return;
+    }
+
+    setEditDialogOpen(false);
+  };
+
+  if (initialAction === "edit") {
+    return (
+      <EditEventDialog
+        event={event}
+        onClose={onClose}
+        onUpdated={(updatedEvent) => {
+          onEventUpdated(updatedEvent);
+          onClose();
+        }}
+      />
+    );
+  }
+
+  if (initialAction === "delete") {
+    return (
+      <Dialog
+        open
+        onClose={closeDeleteConfirmation}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="direct-delete-event-title"
+      >
+        <DialogTitle id="direct-delete-event-title">
+          Удалить событие?
+        </DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            «{event.title}» будет удалено из расписания. Это действие нельзя
+            отменить.
+          </DialogContentText>
+
+          {deleteEventMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Не удалось удалить событие
+            </Alert>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={closeDeleteConfirmation}
+            disabled={deleteEventMutation.isPending}
+          >
+            Отмена
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => deleteEventMutation.mutate()}
+            disabled={deleteEventMutation.isPending}
+          >
+            {deleteEventMutation.isPending ? "Удаление..." : "Удалить"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog
@@ -290,6 +367,14 @@ export const EventDetailsDialog = ({
               value={repeatLabels[event.repeatInterval]}
             />
 
+            {event.teacherName && (
+              <DetailRow
+                icon={<PersonOutlined fontSize="small" />}
+                label="Преподаватель"
+                value={event.teacherName}
+              />
+            )}
+
             <DetailRow
               icon={
                 online ? (
@@ -350,9 +435,15 @@ export const EventDetailsDialog = ({
       {editDialogOpen && (
         <EditEventDialog
           event={event}
-          onClose={() => setEditDialogOpen(false)}
+          onClose={closeEditDialog}
           onUpdated={(updatedEvent) => {
             onEventUpdated(updatedEvent);
+
+            if (isDirectAction) {
+              onClose();
+              return;
+            }
+
             setEditDialogOpen(false);
           }}
         />

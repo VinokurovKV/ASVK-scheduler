@@ -26,6 +26,7 @@ import {
   eventTypeStyles,
 } from "../../constants/events";
 import { getCalendarLabel } from "../../constants/calendars";
+import { formatTeacherShortName } from "../../constants/teachers";
 import type { Event, EventType } from "../../types/Event";
 
 interface DesktopEventRowProps {
@@ -185,6 +186,20 @@ export const DesktopEventRow = ({
               fontWeight: 700,
             }}
           />
+          {event.teacherName && (
+            <Chip
+              label={formatTeacherShortName(event.teacherName)}
+              size="small"
+              variant="outlined"
+              sx={{
+                height: 24,
+                borderColor: "app.border.field",
+                color: "text.secondary",
+                fontSize: "0.7rem",
+                fontWeight: 650,
+              }}
+            />
+          )}
           {isOnline && (
             <Chip
               label="Онлайн"

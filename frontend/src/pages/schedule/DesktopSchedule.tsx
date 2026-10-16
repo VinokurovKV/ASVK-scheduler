@@ -24,6 +24,7 @@ interface DesktopScheduleProps {
   events: Event[];
   weekStart: Date;
   onWeekChange: (direction: number) => void;
+  onOpenDetails: (event: Event) => void;
 }
 
 const START_HOUR = 8;
@@ -65,6 +66,7 @@ export const DesktopSchedule = ({
   events,
   weekStart,
   onWeekChange,
+  onOpenDetails,
 }: DesktopScheduleProps) => {
   const today = new Date();
 
@@ -259,10 +261,26 @@ export const DesktopSchedule = ({
                 {/* Events */}
                 {dayEvents.map((event) => {
                   const { top, height } = getEventPosition(event);
+                  const durationMinutes = Math.round(
+                    (new Date(event.endsAt).getTime() -
+                      new Date(event.startsAt).getTime()) /
+                      (60 * 1000),
+                  );
+                  const timeLabel = `${formatTime(event.startsAt)}–${formatTime(event.endsAt)}`;
+                  const locationLabel =
+                    event.format === "ONLINE"
+                      ? "Онлайн"
+                      : event.room
+                        ? `Аудитория ${event.room}`
+                        : "Очно";
 
                   return (
                     <Box
                       key={event.id}
+                      component="button"
+                      type="button"
+                      aria-label={`Открыть событие «${event.title}»`}
+                      onClick={() => onOpenDetails(event)}
                       sx={{
                         position: "absolute",
 
@@ -271,9 +289,12 @@ export const DesktopSchedule = ({
                         right: 4,
                         height,
 
-                        p: 1,
+                        p: durationMinutes <= 30 ? 0.5 : 0.75,
 
                         borderRadius: 2,
+                        borderTop: 0,
+                        borderRight: 0,
+                        borderBottom: 0,
 
                         overflow: "hidden",
 
@@ -288,71 +309,116 @@ export const DesktopSchedule = ({
                         boxShadow: 1,
 
                         zIndex: 1,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        font: "inherit",
+                        transition: "filter 150ms ease, transform 150ms ease",
+                        "&:hover": {
+                          filter: "brightness(0.97)",
+                          transform: "translateX(2px)",
+                        },
+                        "&:focus-visible": {
+                          outline: "2px solid",
+                          outlineColor: "primary.main",
+                          outlineOffset: 2,
+                        },
                       }}
                     >
-                      <Typography
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: "0.78rem",
-                          lineHeight: 1.2,
-
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {event.title}
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 0.5,
-                          fontSize: "0.7rem",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {formatTime(event.startsAt)}
-                        {"–"}
-                        {formatTime(event.endsAt)}
-                      </Typography>
-
-                      {height >= 55 && (
-                        <Stack
-                          direction="row"
-                          spacing={0.5}
+                      {durationMinutes <= 30 ? (
+                        <Typography
                           sx={{
-                            mt: 0.5,
-                            alignItems: "center",
+                            overflow: "hidden",
+                            fontSize: "0.68rem",
+                            lineHeight: 1.25,
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          {event.format === "ONLINE" ? (
-                            <Videocam
-                              sx={{
-                                fontSize: 14,
-                              }}
-                            />
-                          ) : (
-                            <LocationOn
-                              sx={{
-                                fontSize: 14,
-                              }}
-                            />
-                          )}
-
+                          <Box component="span" sx={{ fontWeight: 600 }}>
+                            {timeLabel} · {event.title} ·{" "}
+                          </Box>
+                          {locationLabel}
+                        </Typography>
+                      ) : durationMinutes <= 60 ? (
+                        <>
                           <Typography
                             sx={{
-                              fontSize: "0.68rem",
-
                               overflow: "hidden",
-
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                              lineHeight: 1.2,
                               textOverflow: "ellipsis",
-
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {event.format === "ONLINE" ? "Онлайн" : event.room}
+                            {timeLabel} · {event.title}
                           </Typography>
-                        </Stack>
+
+                          <Typography
+                            sx={{
+                              mt: 0.25,
+                              overflow: "hidden",
+                              fontSize: "0.68rem",
+                              lineHeight: 1.2,
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {locationLabel}
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography
+                            sx={{
+                              overflow: "hidden",
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                              lineHeight: 1.15,
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {timeLabel}
+                          </Typography>
+
+                          <Typography
+                            sx={{
+                              mt: 0.2,
+                              overflow: "hidden",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              lineHeight: 1.15,
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {event.title}
+                          </Typography>
+
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ mt: 0.2, alignItems: "center" }}
+                          >
+                            {event.format === "ONLINE" ? (
+                              <Videocam sx={{ fontSize: 14 }} />
+                            ) : (
+                              <LocationOn sx={{ fontSize: 14 }} />
+                            )}
+                            <Typography
+                              sx={{
+                                overflow: "hidden",
+                                fontSize: "0.68rem",
+                                lineHeight: 1.15,
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {locationLabel}
+                            </Typography>
+                          </Stack>
+                        </>
                       )}
                     </Box>
                   );

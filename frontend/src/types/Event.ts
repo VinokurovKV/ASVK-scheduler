@@ -32,6 +32,7 @@ export interface Event {
 
   room: string | null;
   meetingUrl: string | null;
+  teacherName: string | null;
 
   calendarId: number;
   creatorId: number;
@@ -54,6 +55,7 @@ export interface CreateEventInput {
 
   room?: string;
   meetingUrl?: string;
+  teacherName?: string | null;
   calendarId?: number;
 }
 
@@ -70,4 +72,5 @@ export interface UpdateEventInput {
 
   room?: string;
   meetingUrl?: string;
+  teacherName?: string | null;
 }

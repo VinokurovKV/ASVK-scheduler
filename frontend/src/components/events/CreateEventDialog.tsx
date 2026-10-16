@@ -60,6 +60,7 @@ export const CreateEventDialog = ({
         repeatInterval: "WEEK",
         room: "",
         meetingUrl: "",
+        teacherName: "",
         calendarId:
           calendars.find((calendar) => calendar.type === "PERSONAL")?.id,
       }}
