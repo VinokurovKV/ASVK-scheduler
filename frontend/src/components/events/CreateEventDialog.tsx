@@ -55,7 +55,7 @@ export const CreateEventDialog = ({
         description: "",
         startsAt: start.toISOString(),
         endsAt: end.toISOString(),
-        eventType: "MEETING",
+        eventType: "LECTURE",
         format: "OFFLINE",
         repeatInterval: "WEEK",
         room: "",
@@ -65,6 +65,10 @@ export const CreateEventDialog = ({
           calendars.find((calendar) => calendar.type === "PERSONAL")?.id,
       }}
       calendarOptions={calendars}
+      eventTypeOptions={[
+        { value: "LECTURE", label: "Лекция" },
+        { value: "SEMINAR", label: "Семинар" },
+      ]}
       isPending={createEventMutation.isPending}
       isError={createEventMutation.isError}
       onSubmit={(values) => createEventMutation.mutate(values)}

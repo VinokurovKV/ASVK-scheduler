@@ -1,4 +1,4 @@
-import { Close, FilterAltOutlined, Search } from "@mui/icons-material";
+import { Add, Close, FilterAltOutlined, Search } from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Divider,
   Drawer,
+  Fab,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -29,6 +30,7 @@ import {
 } from "../api/meetings";
 import { EventDetailsDialog } from "../components/events/EventDetailsDialog";
 import { MobileMeetingCard } from "../components/meetings/MobileMeetingCard";
+import { CreateMeetingDialog } from "../components/meetings/CreateMeetingDialog";
 import { getNextEventOccurrenceForEvent } from "./schedule/scheduleUtils";
 
 type MeetingSection = "UPCOMING" | "INVITATIONS" | "PAST";
@@ -67,6 +69,7 @@ export const MeetingsPage = () => {
     useState<MeetingTypeFilter>("ALL");
   const [draftOnlyOrganizedByMe, setDraftOnlyOrganizedByMe] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [createMeetingOpen, setCreateMeetingOpen] = useState(false);
   const [currentTime] = useState(() => Date.now());
 
   const { data: currentUser } = useQuery({
@@ -152,17 +155,39 @@ export const MeetingsPage = () => {
   return (
     <>
       <Stack
-        spacing={1.5}
+        spacing={{ xs: 1.5, lg: 2.5 }}
         sx={{
-          display: { xs: "flex", lg: "none" },
+          display: "flex",
           width: "100%",
+          maxWidth: 1200,
           minWidth: 0,
+          mx: "auto",
           overflowX: "hidden",
         }}
       >
-        <Typography variant="h4" sx={{ fontSize: "1.75rem", fontWeight: 700 }}>
-          Встречи
-        </Typography>
+        <Stack
+          direction="row"
+          sx={{ alignItems: "center", justifyContent: "space-between" }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontSize: { xs: "1.75rem", lg: "2.125rem" },
+              fontWeight: 700,
+            }}
+          >
+            Встречи
+          </Typography>
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setCreateMeetingOpen(true)}
+            sx={{ display: { xs: "none", lg: "inline-flex" } }}
+          >
+            Создать встречу
+          </Button>
+        </Stack>
 
         <Stack direction="row" sx={{ gap: 0.75 }}>
           {(Object.keys(sectionLabels) as MeetingSection[]).map((value) => (
@@ -176,7 +201,7 @@ export const MeetingsPage = () => {
               sx={{
                 flex: 1,
                 minWidth: 0,
-                fontSize: "0.68rem",
+                fontSize: { xs: "0.68rem", lg: "0.85rem" },
                 fontWeight: 650,
                 "& .MuiChip-label": { px: 0.75 },
               }}
@@ -417,13 +442,6 @@ export const MeetingsPage = () => {
         )}
       </Stack>
 
-      <Typography
-        variant="h4"
-        sx={{ display: { xs: "none", lg: "block" }, fontWeight: 700 }}
-      >
-        Встречи
-      </Typography>
-
       {selectedMeeting && (
         <EventDetailsDialog
           event={selectedMeeting}
@@ -441,8 +459,35 @@ export const MeetingsPage = () => {
               ...selectedMeeting,
               ...event,
               eventType: event.eventType,
+              creator: {
+                ...selectedMeeting.creator,
+                ...event.creator,
+              },
             });
           }}
+        />
+      )}
+
+      <Fab
+        color="primary"
+        aria-label="Создать встречу"
+        onClick={() => setCreateMeetingOpen(true)}
+        sx={{
+          display: { xs: "flex", lg: "none" },
+          position: "fixed",
+          right: 16,
+          bottom: { xs: 80, md: 24 },
+          zIndex: 900,
+        }}
+      >
+        <Add />
+      </Fab>
+
+      {createMeetingOpen && (
+        <CreateMeetingDialog
+          open
+          initialDate={new Date()}
+          onClose={() => setCreateMeetingOpen(false)}
         />
       )}
     </>

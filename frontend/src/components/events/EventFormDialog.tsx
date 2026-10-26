@@ -18,7 +18,7 @@ import {
   useTheme,
 } from "@mui/material";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { getCalendarLabel } from "../../constants/calendars";
 import type {
@@ -51,6 +51,8 @@ interface EventFormDialogProps {
   errorMessage: string;
   initialValues: EventFormValues;
   calendarOptions?: Calendar[];
+  additionalField?: ReactNode;
+  eventTypeOptions?: Array<{ value: EventType; label: string }>;
   isPending: boolean;
   isError: boolean;
   onSubmit: (values: EventFormValues) => void;
@@ -91,6 +93,13 @@ export const EventFormDialog = ({
   errorMessage,
   initialValues,
   calendarOptions,
+  additionalField,
+  eventTypeOptions = [
+    { value: "LECTURE", label: "Лекция" },
+    { value: "SEMINAR", label: "Семинар" },
+    { value: "WORK_MEETING", label: "Совещание" },
+    { value: "MEETING", label: "Встреча" },
+  ],
   isPending,
   isError,
   onSubmit,
@@ -326,6 +335,10 @@ export const EventFormDialog = ({
               </TextField>
             )}
 
+            {!calendarOptions && additionalField && (
+              <Box sx={{ gridArea: "calendar" }}>{additionalField}</Box>
+            )}
+
             <TextField
               label="Описание"
               value={description}
@@ -346,10 +359,11 @@ export const EventFormDialog = ({
               fullWidth
               sx={{ gridArea: "eventType" }}
             >
-              <MenuItem value="LECTURE">Лекция</MenuItem>
-              <MenuItem value="SEMINAR">Семинар</MenuItem>
-              <MenuItem value="WORK_MEETING">Совещание</MenuItem>
-              <MenuItem value="MEETING">Встреча</MenuItem>
+              {eventTypeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
             </TextField>
 
             {hasTeacher && (

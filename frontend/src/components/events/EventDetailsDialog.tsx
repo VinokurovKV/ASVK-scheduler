@@ -4,6 +4,7 @@ import {
   Close,
   DeleteOutlined,
   EditOutlined,
+  GroupsOutlined,
   LocationOn,
   PersonOutlined,
   Repeat,
@@ -13,6 +14,7 @@ import {
 import {
   AppBar,
   Alert,
+  Avatar,
   Box,
   Button,
   Chip,
@@ -25,6 +27,7 @@ import {
   IconButton,
   Stack,
   Toolbar,
+  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -40,7 +43,11 @@ import {
   eventTypeStyles,
 } from "../../constants/events";
 import { getCalendarLabel } from "../../constants/calendars";
-import type { Event, RepeatInterval } from "../../types/Event";
+import type {
+  Event,
+  EventParticipantSummary,
+  RepeatInterval,
+} from "../../types/Event";
 import { EditEventDialog } from "./EditEventDialog";
 
 interface EventDetailsDialogProps {
@@ -99,6 +106,22 @@ const DetailRow = ({ icon, label, value }: DetailRowProps) => (
   </Stack>
 );
 
+const getParticipantInitials = (participant: EventParticipantSummary) => {
+  const firstInitial = participant.firstName?.charAt(0);
+  const lastInitial = participant.lastName?.charAt(0);
+
+  if (firstInitial || lastInitial) {
+    return `${firstInitial ?? ""}${lastInitial ?? ""}`.toUpperCase();
+  }
+
+  return participant.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase();
+};
+
 export const EventDetailsDialog = ({
   event,
   onClose,
@@ -108,6 +131,8 @@ export const EventDetailsDialog = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const online = event.format === "ONLINE";
+  const isMeeting =
+    event.eventType === "MEETING" || event.eventType === "WORK_MEETING";
   const isDirectAction = initialAction !== "details";
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(
     initialAction === "delete",
@@ -257,7 +282,7 @@ export const EventDetailsDialog = ({
           </IconButton>
 
           <Typography variant="h6" sx={{ ml: 1, fontWeight: 600 }}>
-            Событие
+            {isMeeting ? "Встреча" : "Событие"}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -297,11 +322,13 @@ export const EventDetailsDialog = ({
                 flexWrap: "wrap",
               }}
             >
-              <Chip
-                label={getCalendarLabel(event.calendar)}
-                size="small"
-                variant="outlined"
-              />
+              {!isMeeting && (
+                <Chip
+                  label={getCalendarLabel(event.calendar)}
+                  size="small"
+                  variant="outlined"
+                />
+              )}
               <Chip
                 label={eventTypeLabels[event.eventType]}
                 size="small"
@@ -370,6 +397,20 @@ export const EventDetailsDialog = ({
               value={repeatLabels[event.repeatInterval]}
             />
 
+            {isMeeting && (
+              <DetailRow
+                icon={
+                  online ? (
+                    <Videocam fontSize="small" />
+                  ) : (
+                    <LocationOn fontSize="small" />
+                  )
+                }
+                label={online ? "Формат" : "Место"}
+                value={online ? "Онлайн" : `Аудитория ${event.room}`}
+              />
+            )}
+
             {event.teacherName && (
               <DetailRow
                 icon={<PersonOutlined fontSize="small" />}
@@ -378,8 +419,60 @@ export const EventDetailsDialog = ({
               />
             )}
 
-            {(event.eventType === "MEETING" ||
-              event.eventType === "WORK_MEETING") && (
+            {isMeeting && (
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: "flex-start" }}
+              >
+                <Box sx={{ display: "flex", pt: 0.25, color: "action.active" }}>
+                  <GroupsOutlined fontSize="small" />
+                </Box>
+
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mb: 0.75 }}
+                  >
+                    Участники
+                  </Typography>
+
+                  {(event.participants?.length ?? 0) > 0 ? (
+                    <Stack
+                      direction="row"
+                      sx={{ flexWrap: "wrap", gap: 0.75 }}
+                    >
+                      {event.participants?.map((participant) => (
+                        <Tooltip
+                          key={participant.id}
+                          title={participant.name}
+                        >
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: "app.brand.navySoft",
+                              color: "app.brand.accent",
+                              fontSize: "0.68rem",
+                              fontWeight: 750,
+                            }}
+                          >
+                            {getParticipantInitials(participant)}
+                          </Avatar>
+                        </Tooltip>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Участники не добавлены
+                    </Typography>
+                  )}
+                </Box>
+              </Stack>
+            )}
+
+            {isMeeting && (
               <DetailRow
                 icon={<PersonOutlined fontSize="small" />}
                 label="Организатор"
@@ -387,17 +480,19 @@ export const EventDetailsDialog = ({
               />
             )}
 
-            <DetailRow
-              icon={
-                online ? (
-                  <Videocam fontSize="small" />
-                ) : (
-                  <LocationOn fontSize="small" />
-                )
-              }
-              label={online ? "Формат" : "Место"}
-              value={online ? "Онлайн" : `Аудитория ${event.room}`}
-            />
+            {!isMeeting && (
+              <DetailRow
+                icon={
+                  online ? (
+                    <Videocam fontSize="small" />
+                  ) : (
+                    <LocationOn fontSize="small" />
+                  )
+                }
+                label={online ? "Формат" : "Место"}
+                value={online ? "Онлайн" : `Аудитория ${event.room}`}
+              />
+            )}
           </Box>
         </Stack>
       </Box>

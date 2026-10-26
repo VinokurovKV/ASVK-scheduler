@@ -11,7 +11,6 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   Stack,
   Tooltip,
   Typography,
@@ -40,6 +39,24 @@ const formatTime = (value: string) =>
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+
+const getOrganizerRoleLabel = (meeting: Meeting) => {
+  if (meeting.creator.role === "STUDENT") {
+    return meeting.creator.groupNumber
+      ? `Студент · Группа ${meeting.creator.groupNumber}`
+      : "Студент";
+  }
+
+  if (meeting.creator.role === "POSTGRADUATE") {
+    return "Аспирант";
+  }
+
+  if (meeting.creator.role === "EMPLOYEE") {
+    return "Сотрудник";
+  }
+
+  return "Пользователь";
+};
 
 const getParticipantInitials = (
   participant: Pick<
@@ -89,6 +106,16 @@ export const MobileMeetingCard = ({
     <Card
       component="li"
       variant="outlined"
+      role="button"
+      tabIndex={0}
+      aria-label={`Открыть встречу «${meeting.title}»`}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
       sx={{
         width: "100%",
         minWidth: 0,
@@ -99,17 +126,26 @@ export const MobileMeetingCard = ({
         borderRadius: 3,
         bgcolor: "background.paper",
         boxShadow: (theme) => theme.appShadows.button,
+        cursor: "pointer",
+        transition: "background-color 150ms ease, box-shadow 150ms ease",
+        "&:hover": { bgcolor: "action.hover" },
+        "&:focus-visible": {
+          outline: "2px solid",
+          outlineColor: "primary.main",
+          outlineOffset: 2,
+        },
       }}
     >
-      <CardActionArea
-        onClick={onOpen}
-        aria-label={`Открыть встречу «${meeting.title}»`}
+      <Box
         sx={{
           display: "grid",
           width: "100%",
           minWidth: 0,
           boxSizing: "border-box",
-          gridTemplateColumns: "52px minmax(0, 1fr) 24px",
+          gridTemplateColumns: {
+            xs: "52px minmax(0, 1fr) 24px",
+            lg: "64px minmax(0, 1fr) minmax(220px, 0.55fr) 24px",
+          },
           alignItems: "center",
           gap: 1.25,
           p: 1.25,
@@ -122,14 +158,14 @@ export const MobileMeetingCard = ({
         <Box
           sx={{
             display: "grid",
-            width: 52,
-            height: 52,
+            width: { xs: 52, lg: 64 },
+            height: { xs: 52, lg: 64 },
             alignSelf: "start",
             placeItems: "center",
             borderRadius: 2.5,
             bgcolor: typeStyle.surface,
             color: typeStyle.main,
-            "& svg": { fontSize: 29 },
+            "& svg": { fontSize: { xs: 29, lg: 34 } },
           }}
         >
           {meeting.eventType === "WORK_MEETING" ? (
@@ -211,8 +247,62 @@ export const MobileMeetingCard = ({
 
         </Box>
 
+        <Stack
+          direction="row"
+          sx={{
+            display: { xs: "none", lg: "flex" },
+            minWidth: 0,
+            alignSelf: "stretch",
+            alignItems: "center",
+            gap: 1.25,
+            pl: 2,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 44,
+              height: 44,
+              flexShrink: 0,
+              bgcolor: "app.brand.navySoft",
+              color: "app.brand.accent",
+              fontSize: "0.78rem",
+              fontWeight: 750,
+            }}
+          >
+            {getParticipantInitials({
+              name: meeting.creator.name,
+              firstName: null,
+              lastName: null,
+            })}
+          </Avatar>
+
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary">
+              Организатор
+            </Typography>
+            <Typography
+              sx={{
+                overflow: "hidden",
+                fontWeight: 700,
+                lineHeight: 1.25,
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {meeting.creator.name}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.15 }}
+            >
+              {getOrganizerRoleLabel(meeting)}
+            </Typography>
+          </Box>
+        </Stack>
+
         <ChevronRightRounded sx={{ color: "app.brand.accent" }} />
-      </CardActionArea>
+      </Box>
 
       {(cardParticipants.length > 0 ||
         (online && meeting.meetingUrl)) && (
@@ -223,7 +313,7 @@ export const MobileMeetingCard = ({
             alignItems: "center",
             justifyContent: "space-between",
             gap: 1,
-            pl: 8.25,
+            pl: { xs: 9, lg: 10.5 },
             pr: 1.25,
             pb: 1.1,
           }}
@@ -280,6 +370,7 @@ export const MobileMeetingCard = ({
               rel="noreferrer"
               variant="contained"
               size="small"
+              onClick={(event) => event.stopPropagation()}
               sx={{ flexShrink: 0, borderRadius: 3, textTransform: "none" }}
             >
               Подключиться

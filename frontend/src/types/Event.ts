@@ -18,6 +18,14 @@ export interface EventCreator {
   authProvider: "STANDARD" | "ASVK";
 }
 
+export interface EventParticipantSummary {
+  id: number;
+  name: string;
+  firstName: string | null;
+  lastName: string | null;
+  status: "PENDING" | "ACCEPTED";
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -39,6 +47,7 @@ export interface Event {
 
   calendar: Calendar;
   creator: EventCreator;
+  participants?: EventParticipantSummary[];
   canEdit: boolean;
 }
 
