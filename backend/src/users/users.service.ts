@@ -10,7 +10,11 @@ export class UsersService {
       select: {
         id: true,
         name: true,
+        firstName: true,
+        lastName: true,
         username: true,
+        role: true,
+        groupNumber: true,
         authProvider: true,
       },
     });

@@ -123,6 +123,9 @@ export const EventDetailsDialog = ({
       await queryClient.invalidateQueries({
         queryKey: ["events"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["meetings"],
+      });
 
       onClose();
     },
@@ -372,6 +375,15 @@ export const EventDetailsDialog = ({
                 icon={<PersonOutlined fontSize="small" />}
                 label="Преподаватель"
                 value={event.teacherName}
+              />
+            )}
+
+            {(event.eventType === "MEETING" ||
+              event.eventType === "WORK_MEETING") && (
+              <DetailRow
+                icon={<PersonOutlined fontSize="small" />}
+                label="Организатор"
+                value={event.creator.name}
               />
             )}
 

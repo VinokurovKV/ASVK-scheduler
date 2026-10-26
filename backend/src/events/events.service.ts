@@ -58,7 +58,45 @@ const eventInclude = {
       authProvider: true,
     },
   },
+  participants: {
+    where: { status: { not: 'DECLINED' as const } },
+    select: {
+      status: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+  },
 } as const;
+
+const withParticipants = <
+  T extends {
+    participants?: Array<{
+      status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
+      user: {
+        id: number;
+        name: string;
+        firstName: string | null;
+        lastName: string | null;
+      };
+    }>;
+  },
+>(event: T) => {
+  const { participants = [], ...eventDetails } = event;
+
+  return {
+    ...eventDetails,
+    participants: participants.map(({ user, status }) => ({
+      ...user,
+      status,
+    })),
+  };
+};
 
 @Injectable()
 export class EventsService {
@@ -96,7 +134,7 @@ export class EventsService {
     });
 
     return events.map((event) => ({
-      ...event,
+      ...withParticipants(event),
       canEdit: calendarPermissions.get(event.calendarId) === true,
     }));
   }
@@ -174,7 +212,7 @@ export class EventsService {
       include: eventInclude,
     });
 
-    return { ...event, canEdit: true };
+    return { ...withParticipants(event), canEdit: true };
   }
 
   async update(userId: number, id: number, input: UpdateEventInput) {
@@ -248,7 +286,7 @@ export class EventsService {
       include: eventInclude,
     });
 
-    return { ...event, canEdit: true };
+    return { ...withParticipants(event), canEdit: true };
   }
 
   async remove(userId: number, id: number) {

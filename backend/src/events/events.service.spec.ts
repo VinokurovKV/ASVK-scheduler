@@ -55,8 +55,8 @@ describe('EventsService calendar access', () => {
     ]);
 
     await expect(service.findAll(42)).resolves.toEqual([
-      { id: 1, calendarId: 7, canEdit: true },
-      { id: 2, calendarId: 8, canEdit: false },
+      { id: 1, calendarId: 7, participants: [], canEdit: true },
+      { id: 2, calendarId: 8, participants: [], canEdit: false },
     ]);
 
     expect(prisma.event.findMany).toHaveBeenCalledWith(
@@ -171,7 +171,7 @@ describe('EventsService calendar access', () => {
 
     await expect(
       service.update(42, 10, { title: 'Обновлённый семинар' }),
-    ).resolves.toEqual({ id: 10, canEdit: true });
+    ).resolves.toEqual({ id: 10, participants: [], canEdit: true });
   });
 
   it('clears the teacher when an academic event changes its type', async () => {

@@ -30,6 +30,9 @@ export const EditEventDialog = ({
       await queryClient.invalidateQueries({
         queryKey: ["events"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["meetings"],
+      });
 
       onUpdated(updatedEvent);
     },

@@ -66,8 +66,6 @@ const formatOptions: Array<{ value: FormatFilter; label: string }> = [
 const typeOptions: Array<{ value: TypeFilter; label: string }> = [
   { value: "LECTURE", label: "Лекция" },
   { value: "SEMINAR", label: "Семинар" },
-  { value: "WORK_MEETING", label: "Совещание" },
-  { value: "MEETING", label: "Встреча" },
 ];
 
 const dateOptions: Array<{ value: DateFilter; label: string }> = [
@@ -132,15 +130,21 @@ export const EventsPage = () => {
     queryFn: getEvents,
   });
 
-  const eventsWithNearestOccurrences = events.map((event) => {
-    if (event.repeatInterval === "NONE") {
-      return event;
-    }
+  const eventsWithNearestOccurrences = events
+    .filter(
+      (event) =>
+        event.eventType !== "MEETING" &&
+        event.eventType !== "WORK_MEETING",
+    )
+    .map((event) => {
+      if (event.repeatInterval === "NONE") {
+        return event;
+      }
 
-    return (
-      getNextEventOccurrenceForEvent(event, new Date(currentTime)) ?? event
-    );
-  });
+      return (
+        getNextEventOccurrenceForEvent(event, new Date(currentTime)) ?? event
+      );
+    });
 
   const sortedEvents = [...eventsWithNearestOccurrences].sort(
     (first, second) => {
