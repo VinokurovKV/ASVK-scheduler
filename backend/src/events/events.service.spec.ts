@@ -61,7 +61,17 @@ describe('EventsService calendar access', () => {
 
     expect(prisma.event.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { calendarId: { in: [7, 8] } },
+        where: {
+          OR: [
+            { calendarId: { in: [7, 8] } },
+            {
+              eventType: { in: ['MEETING', 'WORK_MEETING'] },
+              participants: {
+                some: { userId: 42, status: 'ACCEPTED' },
+              },
+            },
+          ],
+        },
       }),
     );
   });

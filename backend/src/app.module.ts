@@ -7,6 +7,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { SupportModule } from './support/support.module.js';
 import { CalendarsModule } from './calendars/calendars.module.js';
 import { SystemModule } from './system/system.module.js';
+import { MeetingsModule } from './meetings/meetings.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SystemModule } from './system/system.module.js';
     AuthModule,
     SupportModule,
     SystemModule,
+    MeetingsModule,
   ],
 })
 export class AppModule {}

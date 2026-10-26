@@ -75,9 +75,19 @@ export class EventsService {
 
     const events = await this.prisma.event.findMany({
       where: {
-        calendarId: {
-          in: calendars.map((calendar) => calendar.id),
-        },
+        OR: [
+          {
+            calendarId: {
+              in: calendars.map((calendar) => calendar.id),
+            },
+          },
+          {
+            eventType: { in: ['MEETING', 'WORK_MEETING'] },
+            participants: {
+              some: { userId, status: 'ACCEPTED' },
+            },
+          },
+        ],
       },
       orderBy: {
         startsAt: 'asc',
