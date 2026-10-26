@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 
 import type { Meeting, MeetingParticipant } from "../../api/meetings";
+import { getAvatarColorSx } from "../../constants/avatarColors";
 import { eventTypeStyles } from "../../constants/events";
 
 interface MobileMeetingCardProps {
@@ -91,6 +92,7 @@ export const MobileMeetingCard = ({
       name: meeting.creator.name,
       firstName: null,
       lastName: null,
+      avatarColor: meeting.creator.avatarColor,
     },
     ...meeting.participants.filter(
       (participant) => participant.id !== meeting.creator.id,
@@ -259,15 +261,16 @@ export const MobileMeetingCard = ({
           }}
         >
           <Avatar
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              bgcolor: "app.brand.navySoft",
-              color: "app.brand.accent",
-              fontSize: "0.78rem",
-              fontWeight: 750,
-            }}
+            sx={[
+              {
+                width: 44,
+                height: 44,
+                flexShrink: 0,
+                fontSize: "0.78rem",
+                fontWeight: 750,
+              },
+              getAvatarColorSx(meeting.creator.avatarColor),
+            ]}
           >
             {getParticipantInitials({
               name: meeting.creator.name,
@@ -322,22 +325,23 @@ export const MobileMeetingCard = ({
             {visibleParticipants.map((participant, index) => (
               <Tooltip key={participant.id} title={participant.name}>
                 <Avatar
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    ml: index === 0 ? 0 : -0.75,
-                    border: "2px solid",
-                    borderColor:
-                      participant.id === meeting.creator.id
-                        ? "primary.main"
-                        : "background.paper",
-                    bgcolor: "app.brand.navySoft",
-                    color: "app.brand.accent",
-                    fontSize: "0.66rem",
-                    fontWeight: 750,
-                    zIndex:
-                      participant.id === meeting.creator.id ? 2 : 1,
-                  }}
+                  sx={[
+                    {
+                      width: 28,
+                      height: 28,
+                      ml: index === 0 ? 0 : -0.75,
+                      border: "2px solid",
+                      borderColor:
+                        participant.id === meeting.creator.id
+                          ? "primary.main"
+                          : "background.paper",
+                      fontSize: "0.66rem",
+                      fontWeight: 750,
+                      zIndex:
+                        participant.id === meeting.creator.id ? 2 : 1,
+                    },
+                    getAvatarColorSx(participant.avatarColor),
+                  ]}
                 >
                   {getParticipantInitials(participant)}
                 </Avatar>

@@ -8,6 +8,7 @@ import type { ProfileViewProps } from "./profileViewTypes";
 export const DesktopProfileView = ({
   values,
   initials,
+  avatarColor,
   roleLabel,
   isStudent,
   isEditing,
@@ -64,6 +65,7 @@ export const DesktopProfileView = ({
           <ProfileAvatar
             variant="desktop"
             initials={initials}
+            avatarColor={avatarColor}
             isEditing={isEditing}
             onMenuOpen={onAvatarMenuOpen}
           />

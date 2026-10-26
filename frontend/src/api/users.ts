@@ -1,4 +1,4 @@
-import type { AuthProvider, UserRole } from "../types/Auth";
+import type { AuthProvider, AvatarColor, UserRole } from "../types/Auth";
 import { apiFetch } from "./config";
 
 export const USERS_QUERY_KEY = ["users"] as const;
@@ -11,6 +11,7 @@ export interface PublicUser {
   username: string | null;
   role: UserRole | null;
   groupNumber: string | null;
+  avatarColor: AvatarColor;
   authProvider: AuthProvider;
 }
 

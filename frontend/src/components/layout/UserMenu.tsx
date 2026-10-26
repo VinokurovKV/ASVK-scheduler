@@ -15,11 +15,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getAvatarColorSx } from "../../constants/avatarColors";
+import type { AvatarColor } from "../../types/Auth";
 
 interface UserMenuProps {
   anchor: HTMLElement | null;
   arrowRight: number;
   initials: string;
+  avatarColor?: AvatarColor;
   userName: string;
   userRoleLabel: string;
   isOwner: boolean;
@@ -32,6 +35,7 @@ export const UserMenu = ({
   anchor,
   arrowRight,
   initials,
+  avatarColor,
   userName,
   userRoleLabel,
   isOwner,
@@ -95,15 +99,16 @@ export const UserMenu = ({
         }}
       >
         <Avatar
-          sx={{
-            width: 44,
-            height: 44,
-            flexShrink: 0,
-            bgcolor: "app.brand.navy",
-            color: "common.white",
-            fontSize: "0.95rem",
-            fontWeight: 700,
-          }}
+          sx={[
+            {
+              width: 44,
+              height: 44,
+              flexShrink: 0,
+              fontSize: "0.95rem",
+              fontWeight: 700,
+            },
+            getAvatarColorSx(avatarColor),
+          ]}
         >
           {initials}
         </Avatar>

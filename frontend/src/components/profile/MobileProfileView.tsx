@@ -8,6 +8,7 @@ import type { ProfileViewProps } from "./profileViewTypes";
 export const MobileProfileView = ({
   values,
   initials,
+  avatarColor,
   roleLabel,
   isStudent,
   isEditing,
@@ -38,6 +39,7 @@ export const MobileProfileView = ({
         <ProfileAvatar
           variant="mobile"
           initials={initials}
+          avatarColor={avatarColor}
           isEditing={isEditing}
           onMenuOpen={onAvatarMenuOpen}
         />

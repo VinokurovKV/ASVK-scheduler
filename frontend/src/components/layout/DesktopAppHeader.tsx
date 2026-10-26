@@ -10,11 +10,14 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { getAvatarColorSx } from "../../constants/avatarColors";
+import type { AvatarColor } from "../../types/Auth";
 
 interface DesktopAppHeaderProps {
   sidebarWidth: number;
   height: number;
   initials: string;
+  avatarColor?: AvatarColor;
   userName: string;
   userRoleLabel: string;
   onUserMenuOpen: (element: HTMLElement) => void;
@@ -34,6 +37,7 @@ export const DesktopAppHeader = ({
   sidebarWidth,
   height,
   initials,
+  avatarColor,
   userName,
   userRoleLabel,
   onUserMenuOpen,
@@ -84,14 +88,15 @@ export const DesktopAppHeader = ({
         }}
       >
         <Avatar
-          sx={{
-            width: 40,
-            height: 40,
-            bgcolor: "app.brand.navySoft",
-            color: "app.brand.accent",
-            fontSize: "0.9rem",
-            fontWeight: 700,
-          }}
+          sx={[
+            {
+              width: 40,
+              height: 40,
+              fontSize: "0.9rem",
+              fontWeight: 700,
+            },
+            getAvatarColorSx(avatarColor),
+          ]}
         >
           {initials}
         </Avatar>

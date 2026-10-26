@@ -5,14 +5,18 @@ import {
 } from "@mui/icons-material";
 import { Avatar, Box, IconButton, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { AvatarColor } from "../../types/Auth";
+import { getAvatarColorSx } from "../../constants/avatarColors";
 
 interface MobileAppHeaderProps {
   initials: string;
+  avatarColor?: AvatarColor;
   onUserMenuOpen: (element: HTMLElement) => void;
 }
 
 export const MobileAppHeader = ({
   initials,
+  avatarColor,
   onUserMenuOpen,
 }: MobileAppHeaderProps) => {
   const location = useLocation();
@@ -127,14 +131,15 @@ export const MobileAppHeader = ({
         sx={{ justifySelf: "center", p: 0.5 }}
       >
         <Avatar
-          sx={{
-            width: 34,
-            height: 34,
-            bgcolor: "app.brand.navySoft",
-            color: "app.brand.accent",
-            fontSize: "0.82rem",
-            fontWeight: 700,
-          }}
+          sx={[
+            {
+              width: 34,
+              height: 34,
+              fontSize: "0.82rem",
+              fontWeight: 700,
+            },
+            getAvatarColorSx(avatarColor),
+          ]}
         >
           {initials}
         </Avatar>

@@ -1,10 +1,20 @@
 export type AuthProvider = "STANDARD" | "ASVK";
 export type AppRole = "GROUP_LEADER" | "OWNER";
+export type AvatarColor =
+  | "BLUE"
+  | "SKY"
+  | "TURQUOISE"
+  | "MAGENTA"
+  | "VIOLET"
+  | "PINK"
+  | "BURGUNDY"
+  | "RED"
+  | "ORANGE"
+  | "YELLOW"
+  | "LIME"
+  | "GREEN";
 
-export type UserRole =
-  | "STUDENT"
-  | "POSTGRADUATE"
-  | "EMPLOYEE";
+export type UserRole = "STUDENT" | "POSTGRADUATE" | "EMPLOYEE";
 
 export interface AuthUser {
   id: number;
@@ -19,6 +29,7 @@ export interface AuthUser {
   role: UserRole | null;
   groupNumber: string | null;
   appRoles: AppRole[];
+  avatarColor: AvatarColor;
 
   authProvider: AuthProvider;
 
@@ -62,6 +73,7 @@ export interface UpdateProfileInput {
 
   role: UserRole;
   groupNumber?: string;
+  avatarColor?: AvatarColor;
 }
 
 export type SessionDeviceType = "PHONE" | "LAPTOP" | "DESKTOP";

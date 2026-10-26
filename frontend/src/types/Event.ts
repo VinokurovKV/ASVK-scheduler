@@ -23,6 +23,7 @@ export interface EventParticipantSummary {
   name: string;
   firstName: string | null;
   lastName: string | null;
+  avatarColor: import("./Auth").AvatarColor;
   status: "PENDING" | "ACCEPTED";
 }
 

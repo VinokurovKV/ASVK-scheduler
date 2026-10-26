@@ -1,5 +1,5 @@
 import type { Event } from "../types/Event";
-import type { UserRole } from "../types/Auth";
+import type { AvatarColor, UserRole } from "../types/Auth";
 import type {
   EventFormat,
   RepeatInterval,
@@ -18,6 +18,7 @@ export interface MeetingParticipant {
   name: string;
   firstName: string | null;
   lastName: string | null;
+  avatarColor: AvatarColor;
   status: "PENDING" | "ACCEPTED";
 }
 
@@ -28,6 +29,7 @@ export interface MeetingOrganizer {
   authProvider: "STANDARD" | "ASVK";
   role: UserRole | null;
   groupNumber: string | null;
+  avatarColor: AvatarColor;
 }
 
 export interface Meeting extends Omit<Event, "eventType" | "creator"> {

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { type MouseEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { AuthApiError, updateCurrentUser } from "../../api/auth";
 import { AUTH_QUERY_KEY } from "../../api/authQuery";
@@ -75,6 +75,7 @@ const getInitialValues = (user: AuthUser): ProfileFormValues => ({
   email: user.email,
   role: user.role,
   groupNumber: user.groupNumber ?? "",
+  avatarColor: user.avatarColor,
 });
 
 export const useProfileEditor = (user: AuthUser) => {
@@ -111,6 +112,7 @@ export const useProfileEditor = (user: AuthUser) => {
     values.username.trim() !== (user.username ?? "").trim() ||
     values.email.trim() !== user.email.trim() ||
     values.role !== user.role ||
+    values.avatarColor !== user.avatarColor ||
     (isStudent
       ? values.groupNumber !== (user.groupNumber ?? "")
       : user.groupNumber !== null && user.groupNumber !== undefined);
@@ -262,6 +264,7 @@ export const useProfileEditor = (user: AuthUser) => {
       email: values.email.trim(),
       role: values.role,
       groupNumber: isStudent ? values.groupNumber : undefined,
+      avatarColor: values.avatarColor,
     });
   };
 
@@ -281,8 +284,7 @@ export const useProfileEditor = (user: AuthUser) => {
     startEditing: () => setIsEditing(true),
     cancelEditing,
     save,
-    openAvatarMenu: (event: MouseEvent<HTMLElement>) =>
-      setAvatarMenuAnchor(event.currentTarget),
+    openAvatarMenu: (anchor: HTMLElement) => setAvatarMenuAnchor(anchor),
     closeAvatarMenu: () => setAvatarMenuAnchor(null),
     removeErrorToast,
     hideSuccessToast,

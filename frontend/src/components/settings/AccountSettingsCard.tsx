@@ -5,6 +5,7 @@ import {
 import { Avatar, Box, Button, Paper, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
+import { getAvatarColorSx } from "../../constants/avatarColors";
 import type { AuthUser } from "../../types/Auth";
 
 interface AccountSettingsCardProps {
@@ -82,15 +83,16 @@ export const AccountSettingsCard = ({ user }: AccountSettingsCardProps) => {
           }}
         >
           <Avatar
-            sx={{
-              width: 64,
-              height: 64,
-              flexShrink: 0,
-              bgcolor: "app.brand.navy",
-              color: "common.white",
-              fontSize: { xs: "1.2rem", md: "1.45rem" },
-              fontWeight: 700,
-            }}
+            sx={[
+              {
+                width: 64,
+                height: 64,
+                flexShrink: 0,
+                fontSize: { xs: "1.2rem", md: "1.45rem" },
+                fontWeight: 700,
+              },
+              getAvatarColorSx(user.avatarColor),
+            ]}
           >
             {initials}
           </Avatar>

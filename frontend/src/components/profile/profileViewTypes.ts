@@ -1,5 +1,3 @@
-import type { MouseEvent } from "react";
-
 import type {
   ProfileField,
   ProfileFormValues,
@@ -9,6 +7,7 @@ import type {
 export interface ProfileViewProps {
   values: ProfileFormValues;
   initials: string;
+  avatarColor: ProfileFormValues["avatarColor"];
   roleLabel: string;
   isStudent: boolean;
   isEditing: boolean;
@@ -19,5 +18,5 @@ export interface ProfileViewProps {
   onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
-  onAvatarMenuOpen: (event: MouseEvent<HTMLElement>) => void;
+  onAvatarMenuOpen: (anchor: HTMLElement) => void;
 }

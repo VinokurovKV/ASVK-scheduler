@@ -5,6 +5,7 @@ import { useState } from "react";
 import { getCurrentUser } from "../../api/auth";
 import { AUTH_QUERY_KEY } from "../../api/authQuery";
 import { createMeeting } from "../../api/meetings";
+import { getAvatarColorSx } from "../../constants/avatarColors";
 import {
   getUsers,
   USERS_QUERY_KEY,
@@ -138,14 +139,15 @@ export const CreateMeetingDialog = ({
                 sx={{ display: "flex", gap: 1.25 }}
               >
                 <Avatar
-                  sx={{
-                    width: 34,
-                    height: 34,
-                    bgcolor: "app.brand.navySoft",
-                    color: "app.brand.accent",
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                  }}
+                  sx={[
+                    {
+                      width: 34,
+                      height: 34,
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                    },
+                    getAvatarColorSx(user.avatarColor),
+                  ]}
                 >
                   {getInitials(user)}
                 </Avatar>

@@ -108,6 +108,7 @@ export const AppLayout = () => {
     >
       <MobileAppHeader
         initials={initials}
+        avatarColor={user?.avatarColor}
         onUserMenuOpen={handleUserMenuOpen}
       />
 
@@ -121,6 +122,7 @@ export const AppLayout = () => {
         sidebarWidth={currentSidebarWidth}
         height={DESKTOP_HEADER_HEIGHT}
         initials={initials}
+        avatarColor={user?.avatarColor}
         userName={userName}
         userRoleLabel={userRoleLabel}
         onUserMenuOpen={handleUserMenuOpen}
@@ -130,6 +132,7 @@ export const AppLayout = () => {
         anchor={userMenuAnchor}
         arrowRight={menuArrowRight}
         initials={initials}
+        avatarColor={user?.avatarColor}
         userName={userName}
         userRoleLabel={userRoleLabel}
         isOwner={isOwner}

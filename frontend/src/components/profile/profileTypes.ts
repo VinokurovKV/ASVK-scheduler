@@ -8,7 +8,8 @@ export type ProfileField =
   | "username"
   | "email"
   | "role"
-  | "groupNumber";
+  | "groupNumber"
+  | "avatarColor";
 
 export interface ProfileFormValues {
   firstName: string;
@@ -17,6 +18,7 @@ export interface ProfileFormValues {
   email: string;
   role: UserRole | null;
   groupNumber: string;
+  avatarColor: AuthUser["avatarColor"];
 }
 
 export type ProfileValueChangeHandler = <Field extends ProfileField>(

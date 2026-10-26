@@ -43,6 +43,7 @@ import {
   eventTypeStyles,
 } from "../../constants/events";
 import { getCalendarLabel } from "../../constants/calendars";
+import { getAvatarColorSx } from "../../constants/avatarColors";
 import type {
   Event,
   EventParticipantSummary,
@@ -449,14 +450,15 @@ export const EventDetailsDialog = ({
                           title={participant.name}
                         >
                           <Avatar
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              bgcolor: "app.brand.navySoft",
-                              color: "app.brand.accent",
-                              fontSize: "0.68rem",
-                              fontWeight: 750,
-                            }}
+                            sx={[
+                              {
+                                width: 32,
+                                height: 32,
+                                fontSize: "0.68rem",
+                                fontWeight: 750,
+                              },
+                              getAvatarColorSx(participant.avatarColor),
+                            ]}
                           >
                             {getParticipantInitials(participant)}
                           </Avatar>

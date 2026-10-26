@@ -34,6 +34,7 @@ const ProfileContent = ({ user }: { user: AuthUser }) => {
   const viewProps = {
     values: editor.values,
     initials: editor.initials,
+    avatarColor: editor.values.avatarColor,
     roleLabel: editor.roleLabel,
     isStudent: editor.isStudent,
     isEditing: editor.isEditing,
@@ -59,6 +60,11 @@ const ProfileContent = ({ user }: { user: AuthUser }) => {
 
       <ProfileAvatarMenu
         anchor={editor.avatarMenuAnchor}
+        selectedColor={editor.values.avatarColor}
+        onColorSelect={(avatarColor) => {
+          editor.setValue("avatarColor", avatarColor);
+          editor.closeAvatarMenu();
+        }}
         onClose={editor.closeAvatarMenu}
       />
 

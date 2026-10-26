@@ -1,17 +1,20 @@
 import { EditOutlined } from "@mui/icons-material";
 import { Avatar, Box, IconButton } from "@mui/material";
-import type { MouseEvent } from "react";
+import type { AvatarColor } from "../../types/Auth";
+import { getAvatarColorSx } from "../../constants/avatarColors";
 
 interface ProfileAvatarProps {
   variant: "mobile" | "desktop";
   initials: string;
+  avatarColor: AvatarColor;
   isEditing: boolean;
-  onMenuOpen: (event: MouseEvent<HTMLElement>) => void;
+  onMenuOpen: (anchor: HTMLElement) => void;
 }
 
 export const ProfileAvatar = ({
   variant,
   initials,
+  avatarColor,
   isEditing,
   onMenuOpen,
 }: ProfileAvatarProps) => {
@@ -22,14 +25,15 @@ export const ProfileAvatar = ({
   return (
     <Box sx={{ position: "relative", width: isDesktop ? "fit-content" : null }}>
       <Avatar
-        sx={{
-          width: avatarSize,
-          height: avatarSize,
-          bgcolor: "app.brand.navy",
-          color: "common.white",
-          fontSize: isDesktop ? "2rem" : "1.75rem",
-          fontWeight: 700,
-        }}
+        sx={[
+          {
+            width: avatarSize,
+            height: avatarSize,
+            fontSize: isDesktop ? "2rem" : "1.75rem",
+            fontWeight: 700,
+          },
+          getAvatarColorSx(avatarColor),
+        ]}
       >
         {initials}
       </Avatar>
@@ -38,7 +42,12 @@ export const ProfileAvatar = ({
         <IconButton
           size="small"
           aria-label="Изменить аватар"
-          onClick={onMenuOpen}
+          onClick={(event) =>
+            onMenuOpen(
+              (event.currentTarget.previousElementSibling as HTMLElement) ??
+                event.currentTarget,
+            )
+          }
           sx={{
             position: "absolute",
             right: -4,
