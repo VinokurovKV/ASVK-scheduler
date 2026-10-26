@@ -15,6 +15,7 @@ export class UsersService {
         username: true,
         role: true,
         groupNumber: true,
+        avatarColor: true,
         authProvider: true,
       },
     });

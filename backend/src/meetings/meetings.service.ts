@@ -17,6 +17,7 @@ const meetingInclude = {
       authProvider: true,
       role: true,
       groupNumber: true,
+      avatarColor: true,
     },
   },
   participants: {
@@ -29,6 +30,7 @@ const meetingInclude = {
           name: true,
           firstName: true,
           lastName: true,
+          avatarColor: true,
         },
       },
     },

@@ -35,6 +35,7 @@ const publicUserSelect = {
   role: true,
   groupNumber: true,
   appRoles: true,
+  avatarColor: true,
 
   authProvider: true,
 
@@ -571,6 +572,30 @@ export class AuthService {
 
     const email = normalizeIdentifier(input.email);
 
+    const allowedAvatarColors = new Set([
+      'BLUE',
+      'SKY',
+      'TURQUOISE',
+      'MAGENTA',
+      'VIOLET',
+      'PINK',
+      'BURGUNDY',
+      'RED',
+      'ORANGE',
+      'YELLOW',
+      'LIME',
+      'GREEN',
+    ]);
+
+    const avatarColor =
+      input.avatarColor === undefined
+        ? undefined
+        : normalizeString(input.avatarColor).toUpperCase();
+
+    if (avatarColor !== undefined && !allowedAvatarColors.has(avatarColor)) {
+      throw new BadRequestException('Avatar color has an invalid value');
+    }
+
     if (!firstName || firstName.length > 50) {
       throw new BadRequestException('First name has an invalid format');
     }
@@ -678,6 +703,7 @@ export class AuthService {
 
           role: input.role,
           groupNumber,
+          avatarColor,
         },
 
         select: publicUserSelect,

@@ -36,4 +36,5 @@ export interface UpdateProfileInput {
 
   role: UserRole;
   groupNumber?: string;
+  avatarColor?: string;
 }

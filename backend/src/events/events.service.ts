@@ -68,6 +68,7 @@ const eventInclude = {
           name: true,
           firstName: true,
           lastName: true,
+          avatarColor: true,
         },
       },
     },
@@ -83,6 +84,7 @@ const withParticipants = <
         name: string;
         firstName: string | null;
         lastName: string | null;
+        avatarColor: string;
       };
     }>;
   },

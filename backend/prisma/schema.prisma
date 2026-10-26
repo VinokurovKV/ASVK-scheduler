@@ -78,6 +78,7 @@ model User {
   role        UserRole?
   groupNumber String?
   appRoles    AppRole[] @default([])
+  avatarColor String    @default("BLUE")
 
   authProvider AuthProvider @default(STANDARD)
 
